@@ -11,6 +11,9 @@ const app = express()
 const port: string = process.env.PORT ?? '3000'
 const mongoURI: string = process.env.MONGODB_URI ?? ''
 
+/** ROUTE IMPORTS */
+import accountRoutes from './routes/account'
+
 /** MORALIS VARIABLES */
 const serverUrl: string = process.env.MORALIS_SERVERURL ?? ''
 const appId: string = process.env.MORALIS_APPID ?? ''
@@ -22,6 +25,7 @@ app.use(express.json())
 /** END OF EXPRESS MIDDLEWARES */
 
 /** ROUTES */
+app.use('/account', accountRoutes)
 
 app.listen(port, async () => {
     console.log(`Server is running on port ${port}`)
