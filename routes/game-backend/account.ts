@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express'
-import { moralisLogin } from '../api/game-backend/account'
-import { Status } from '../utils/retVal'
+import { moralisLogin } from '../../api/game-backend/account'
+import { Status } from '../../utils/retVal'
 const router = express.Router()
 
 router.post('/moralis-login', async (req: Request, res: Response) => {
@@ -10,8 +10,8 @@ router.post('/moralis-login', async (req: Request, res: Response) => {
         const { status, message, data } = await moralisLogin(email, password)
         res.json(status === Status.ERROR ? {
             status,
-            error: message,
-            message: 'Login to Moralis failed.',
+            error: 'Login to Moralis failed.',
+            message: message,
             data: null
         } : {
             status,
@@ -22,8 +22,8 @@ router.post('/moralis-login', async (req: Request, res: Response) => {
     } catch (err: any) {
         res.status(err.code).json({
             status: Status.ERROR,
-            error: err.message,
-            message: 'Login to Moralis failed.',
+            error: 'Login to Moralis failed.',
+            message: err,
             data: null
         })
     }
