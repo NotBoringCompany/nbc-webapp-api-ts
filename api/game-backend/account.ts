@@ -1,3 +1,5 @@
+import { createPasswordResetRequest, sendResetPasswordEmail } from '../../services/account'
+import { getMoralisUser } from '../../services/moralis'
 import { ReturnValue, Status } from '../../utils/retVal'
 import Moralis from 'moralis-v1/node'
 
@@ -32,5 +34,34 @@ export const moralisLogin = async (email: string, password: string): Promise<Ret
             message: err,
             data: null
         }
+    }
+}
+
+export const sendResetPasswordRequest = async (email: string): Promise<ReturnValue> => {
+    try {
+        const user = await getMoralisUser(email);
+        if (user) {
+            const tokenId = await createPasswordResetRequest(email);
+            const response = await sendResetPasswordEmail(email, tokenId);
+            return {
+                status: Status.SUCCESS,
+                message: `Email has been sent`,
+                data: {
+                    email: response?.accepted[0]
+                }
+            };
+        } else {
+            //goes to catch block
+            throw ('Something went wrong'); 
+            //to prevent enumeration attack, 
+            // we generalise error message and 
+            // not tell users if this email doesn't exist
+        }
+    } catch (err: any) {
+        return {
+            status: Status.ERROR,
+            message: err,
+            data: null
+        };
     }
 }
