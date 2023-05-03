@@ -16,7 +16,8 @@ export const moralisLogin = async (email: string, password: string): Promise<Ret
             message: `Login to Moralis successful. User email: ${email}`,
             data: {
                 sessionToken: user.get('sessionToken'),
-                uniqueHash: user.get('uniqueHash')
+                uniqueHash: user.get('uniqueHash'),
+                walletAddress: user.get('ethAddress')
             }
         }
     } catch (err: any) {
