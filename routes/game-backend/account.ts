@@ -80,8 +80,6 @@ router.get('/reset-password-token-check/:tokenId', async (req: Request, res: Res
 
 router.post('/reset-password', async (req: Request, res: Response) => {
     const { tokenId, newPassword, confirmNewPassword } = req.body;
-    console.log({ newPassword });
-    console.log({ confirmNewPassword });
     try {
         const { status, message, data } = await resetPassword(tokenId, newPassword, confirmNewPassword);
         if (status === Status.ERROR) {
