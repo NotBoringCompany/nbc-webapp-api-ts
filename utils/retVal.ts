@@ -1,9 +1,9 @@
 /**
- * Status enum for `ReturnValue`. Either SUCCESS or ERROR.
+ * Status enum for `ReturnValue`.
  */
 export enum Status {
-    SUCCESS,
-    ERROR
+    SUCCESS=200,
+    ERROR=500
 }
 
 /**

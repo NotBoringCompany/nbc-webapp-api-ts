@@ -21,7 +21,7 @@ router.post('/moralis-login', async (req: Request, res: Response) => {
             data
         })
     } catch (err: any) {
-        res.status(err.code).json({
+        res.status(500).json({
             status: Status.ERROR,
             error: 'Login to Moralis failed.',
             message: err,
@@ -46,7 +46,7 @@ router.get('/fetch-wallet-from-session-token/:sessionToken', async (req: Request
             data
         })
     } catch (err: any) {
-        res.status(err.code).json({
+        res.status(500).json({
             status: Status.ERROR,
             error: 'Fetching wallet from session token failed.',
             message: err,
