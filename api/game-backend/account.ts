@@ -48,7 +48,6 @@ export const moralisLogin = async (email: string, password: string): Promise<Ret
  */
 export const fetchWalletFromSessionToken = async (sessionToken: string): Promise<ReturnValue> => {
     try {
-        void mongoose.connect(process.env.MONGODB_URI ?? '')
         const Session = mongoose.model('Session', SessionQuerySchema, '_Session')
         const sessionQuery = await Session.findOne({ _session_token: sessionToken })
         if (!sessionQuery) {
@@ -61,7 +60,7 @@ export const fetchWalletFromSessionToken = async (sessionToken: string): Promise
 
         // if session token is found, we query the _User collection.
         // first, we split the pointer to get the user object ID.
-        const userPointer = sessionQuery._p_user?.split('_User')[1]
+        const userPointer = sessionQuery._p_user?.split('_User$')[1]
 
         // then, we query the _User collection using the user object ID.
         const User = mongoose.model('User', UserQuerySchema, '_User')
@@ -76,9 +75,7 @@ export const fetchWalletFromSessionToken = async (sessionToken: string): Promise
 
         // if user is found, we return the user's wallet address.
         const walletAddress = userQuery.ethAddress
-
-        console.log(walletAddress)
-
+        
         return {
             status: Status.SUCCESS,
             message: 'Session token found',
@@ -101,7 +98,6 @@ export const fetchWalletFromSessionToken = async (sessionToken: string): Promise
     }
 }
 
-fetchWalletFromSessionToken('r:33ac64081844d4dcd82e17b24ec66f40');
 /**
  * `sendResetPasswordRequest` sends reset password email
  * @param email the user's email
