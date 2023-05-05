@@ -1,7 +1,12 @@
 import { createPasswordResetRequest, resetPasswordService, sendResetPasswordEmail, verifyRPT } from '../../services/account'
 import { ReturnValue, Status } from '../../utils/retVal'
 import Moralis from 'moralis-v1/node'
+import mongoose from 'mongoose'
+import * as dotenv from 'dotenv'
+import path from 'path'
+import { SessionQuerySchema, UserQuerySchema } from '../../schemas/Session'
 
+dotenv.config({ path: path.join(__dirname, '../../.env') })
 /**
  * `moralisLogin` logs the user in via Moralis.
  * @param email the user's email
@@ -36,6 +41,67 @@ export const moralisLogin = async (email: string, password: string): Promise<Ret
     }
 }
 
+/**
+ * fetches a user's wallet address from their session token
+ * @param sessionToken the user's session token
+ * @returns a ReturnValue instance
+ */
+export const fetchWalletFromSessionToken = async (sessionToken: string): Promise<ReturnValue> => {
+    try {
+        void mongoose.connect(process.env.MONGODB_URI ?? '')
+        const Session = mongoose.model('Session', SessionQuerySchema, '_Session')
+        const sessionQuery = await Session.findOne({ _session_token: sessionToken })
+        if (!sessionQuery) {
+            return {
+                status: Status.ERROR,
+                message: 'Session token not found',
+                data: null
+            }
+        }
+
+        // if session token is found, we query the _User collection.
+        // first, we split the pointer to get the user object ID.
+        const userPointer = sessionQuery._p_user?.split('_User')[1]
+
+        // then, we query the _User collection using the user object ID.
+        const User = mongoose.model('User', UserQuerySchema, '_User')
+        const userQuery = await User.findOne({ _id: userPointer })
+        if (!userQuery) {
+            return {
+                status: Status.ERROR,
+                message: 'User not found',
+                data: null
+            }
+        }
+
+        // if user is found, we return the user's wallet address.
+        const walletAddress = userQuery.ethAddress
+
+        console.log(walletAddress)
+
+        return {
+            status: Status.SUCCESS,
+            message: 'Session token found',
+            data: {
+                walletAddress
+            }
+        }
+    } catch (err: any) {
+        console.log({
+            status: Status.ERROR,
+            message: err,
+            data: null
+        })
+
+        return {
+            status: Status.ERROR,
+            message: err,
+            data: null
+        }
+    }
+}
+
+fetchWalletFromSessionToken('r:33ac64081844d4dcd82e17b24ec66f40');
 /**
  * `sendResetPasswordRequest` sends reset password email
  * @param email the user's email

@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { moralisLogin, resetPassword, resetPasswordTokenCheck, sendResetPasswordRequest } from '../../api/game-backend/account'
+import { fetchWalletFromSessionToken, moralisLogin, resetPassword, resetPasswordTokenCheck, sendResetPasswordRequest } from '../../api/game-backend/account'
 import { Status } from '../../utils/retVal'
 
 const router = express.Router()
@@ -24,6 +24,31 @@ router.post('/moralis-login', async (req: Request, res: Response) => {
         res.status(err.code).json({
             status: Status.ERROR,
             error: 'Login to Moralis failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/fetch-wallet-from-session-token/:sessionToken', async (req: Request, res: Response) => {
+    const { sessionToken } = req.params
+    try {
+        const { status, message, data } = await fetchWalletFromSessionToken(sessionToken)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Fetching wallet from session token failed.',
+            message: message,
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(err.code).json({
+            status: Status.ERROR,
+            error: 'Fetching wallet from session token failed.',
             message: err,
             data: null
         })
