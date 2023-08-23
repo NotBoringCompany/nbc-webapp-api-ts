@@ -109,7 +109,7 @@ export const sendVerificationEmail = async (email: string, verificationLink: str
       message: 'Verification email sent: ' + sendEmail,
       data: null
     }
-  } catch (err) {
+  } catch (err: any) {
     console.log({
       status: Status.ERROR,
       message: err,
