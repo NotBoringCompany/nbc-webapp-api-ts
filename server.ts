@@ -14,6 +14,7 @@ const mongoURI: string = process.env.MONGODB_URI ?? ''
 /** ROUTE IMPORTS */
 import backendAccount from './routes/game-backend/account'
 import kosOwnership from './routes/nfts/kos/ownership'
+import webappAccount from './routes/webapp/account'
 
 /** MORALIS VARIABLES */
 const serverUrl: string = process.env.MORALIS_SERVERURL ?? ''
@@ -28,6 +29,7 @@ app.use(express.json())
 /** ROUTES */
 app.use('/backend-account', backendAccount)
 app.use('/kos/ownership', kosOwnership)
+app.use('/webapp', webappAccount)
 
 app.listen(port, async () => {
     console.log(`Server is running on port ${port}`)
