@@ -10,7 +10,7 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
     try {
         const User = mongoose.model('_User', UserSchema, '_User')
         const userQuery = await User.findOne({ email: email })
-        
+
         return !!userQuery
     } catch (err: any) {
         console.log(err)
@@ -23,9 +23,9 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
  * @param verificationLink the link that will be sent to the user's email for verification
  * @returns a MailgunMessageData object
  */
-export const verificationMsg = (verificationLink: string): MailgunMessageData => ({
+export const verificationMsg = (email: string, verificationLink: string): MailgunMessageData => ({
     from: 'support@nbcompany.io',
-    to: ['suwandresukijat@gmail.com'],
+    to: [email],
     subject: 'Test',
     text: 'Testing Mailgun',
     html: verificationTemplate(verificationLink),
@@ -35,7 +35,8 @@ export const verificationMsg = (verificationLink: string): MailgunMessageData =>
  * @param verificationLink the link that will be sent to the user's email for verification
  * This template is used to send verification emails to users for creating their accounts via our webapp.
  */
-export const verificationTemplate = (verificationLink: string): string => `<!DOCTYPE html>
+export const verificationTemplate = (verificationLink: string): string => `
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -105,7 +106,7 @@ export const verificationTemplate = (verificationLink: string): string => `<!DOC
         <div class="verification-text">
             <p>You've recently created an account on our web app. To get started, please verify your email address:</p>
             <p>
-                <a href="{{verificationLink}}" class="verify-button">Verify Email Address</a>
+                <a href="${verificationLink}" class="verify-button">Verify Email Address</a>
             </p>
             <p class="error-color">If this isn't you, please ignore this email or report any suspicious behavior by sending an email back to us.</p>
         </div>

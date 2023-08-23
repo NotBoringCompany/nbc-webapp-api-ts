@@ -21,6 +21,10 @@ export const UserSchema = new mongoose.Schema(
         _hashed_password: String,
         email: String,
         uniqueHash: String,
+        // stores the token that is sent to the user's email for verification and the expiry date.
+        verificationData: Object,
+        // checks whether the user has verified their account via email or not.
+        hasVerified: Boolean,
     }, {
         versionKey: false,
     }

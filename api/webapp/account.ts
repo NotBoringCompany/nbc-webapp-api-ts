@@ -2,12 +2,13 @@ import Mailgun from 'mailgun.js'
 import formData from 'form-data'
 import * as dotenv from 'dotenv'
 import path from 'path'
-import { checkEmailExists, verificationMsg, verificationTemplate } from '../../utils/emailUtils'
+import { checkEmailExists, verificationMsg } from '../../utils/emailUtils'
 import { ReturnValue, Status } from '../../utils/retVal'
 import { UserSchema } from '../../schemas/User'
 import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import { generateObjectId } from '../../utils/cryptoUtils'
+import crypto from 'crypto'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
@@ -45,6 +46,14 @@ export const registerAccount = async (email: string, password: string): Promise<
     // hash the password
     const hashedPassword = await bcrypt.hash(password, 10)
 
+    // create a verification data object to be stored for this user.
+    const verificationData = {
+      // the verification token
+      verificationToken: crypto.randomBytes(64).toString('hex'),
+      // 24 hour validity
+      expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    }
+
     // create a new user doc
     const newUser = new User({
       _id: generateObjectId(),
@@ -52,9 +61,16 @@ export const registerAccount = async (email: string, password: string): Promise<
       _hashed_password: hashedPassword,
       _created_at: Date.now(),
       _updated_at: Date.now(),
+      // since the user hasn't technically verified their email, set this to false.
+      hasVerified: false,
+      verificationData: verificationData
     })
 
+    // save the user to the database
     await newUser.save()
+
+    // send the verification email to the user
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?token=${verificationData.verificationToken}`)
 
     return {
       status: Status.SUCCESS,
@@ -76,15 +92,33 @@ export const registerAccount = async (email: string, password: string): Promise<
   }
 }
 
-// mg.messages
-//   .create('nbcompany.io', verificationMsg('INSERT VERIFICATION LINK HERE'))
-//   .then((msg) => console.log(msg))
-//   .catch((err) => {
-//     console.error('Mailgun Error:', err)
+/**
+ * `sendVerificationEmail` sends a verification email to the user's email.
+ * @param email the user's email to send the verification email to
+ * @param verificationLink the link that will be sent to the user's email for verification
+ * @returns a ReturnValue instance
+ */
+export const sendVerificationEmail = async (email: string, verificationLink: string): Promise<ReturnValue> => {
+  try {
+    const sendEmail = mg.messages
+      .create('nbcompany.io', verificationMsg(email, verificationLink))
 
-//     if (err.response && err.response.status === 401) {
-//       console.error('Authentication error. Check your API key.')
-//     } else {
-//       console.error('Other error occurred.')
-//     }
-//   })
+    return {
+      status: Status.SUCCESS,
+      message: 'Verification email sent: ' + sendEmail,
+      data: null
+    }
+  } catch (err) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
