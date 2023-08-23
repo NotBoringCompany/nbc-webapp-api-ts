@@ -13,15 +13,15 @@ const mg = mailgun.client({
   url: 'https://api.eu.mailgun.net',
 })
 
-mg.messages
-  .create('nbcompany.io', verificationMsg('INSERT VERIFICATION LINK HERE'))
-  .then((msg) => console.log(msg))
-  .catch((err) => {
-    console.error('Mailgun Error:', err)
+// mg.messages
+//   .create('nbcompany.io', verificationMsg('INSERT VERIFICATION LINK HERE'))
+//   .then((msg) => console.log(msg))
+//   .catch((err) => {
+//     console.error('Mailgun Error:', err)
 
-    if (err.response && err.response.status === 401) {
-      console.error('Authentication error. Check your API key.')
-    } else {
-      console.error('Other error occurred.')
-    }
-  })
+//     if (err.response && err.response.status === 401) {
+//       console.error('Authentication error. Check your API key.')
+//     } else {
+//       console.error('Other error occurred.')
+//     }
+//   })
