@@ -26,8 +26,7 @@ export const checkEmailExists = async (email: string): Promise<boolean> => {
 export const verificationMsg = (email: string, verificationLink: string): MailgunMessageData => ({
     from: 'support@nbcompany.io',
     to: [email],
-    subject: 'Test',
-    text: 'Testing Mailgun',
+    subject: 'Verify your email address',
     html: verificationTemplate(verificationLink),
 })
 
