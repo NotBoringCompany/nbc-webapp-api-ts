@@ -64,7 +64,7 @@ export const registerAccount = async (email: string, password: string): Promise<
       // since the user hasn't technically verified their email, set this to false.
       hasVerified: false,
       verificationData: verificationData,
-      uniqueHash: crypto.randomBytes(64).toString('base64')
+      uniqueHash: crypto.randomBytes(64).toString('hex')
     })
 
     // save the user to the database
