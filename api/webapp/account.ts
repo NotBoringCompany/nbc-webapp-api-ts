@@ -49,7 +49,7 @@ export const registerAccount = async (email: string, password: string): Promise<
     // create a verification data object to be stored for this user.
     const verificationData = {
       // the verification token
-      verificationToken: crypto.randomBytes(64).toString('hex'),
+      verificationToken: crypto.randomBytes(150).toString('hex'),
       // 24 hour validity
       expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
     }
