@@ -76,8 +76,6 @@ export const registerAccount = async (email: string, password: string): Promise<
   }
 }
 
-registerAccount('helloasdasd@gmail.com', 'mymememesasdasd92');
-
 // mg.messages
 //   .create('nbcompany.io', verificationMsg('INSERT VERIFICATION LINK HERE'))
 //   .then((msg) => console.log(msg))
