@@ -1,4 +1,22 @@
 import {MailgunMessageData} from 'mailgun.js'
+import mongoose from 'mongoose'
+import { UserSchema } from '../schemas/User'
+
+/**
+ * `checkEmailExists` checks whether an email has already been registered in the _User database.
+ * @param email the user's email
+ */
+export const checkEmailExists = async (email: string): Promise<boolean> => {
+    try {
+        const User = mongoose.model('_User', UserSchema, '_User')
+        const userQuery = await User.findOne({ email: email })
+        
+        return !!userQuery
+    } catch (err: any) {
+        console.log(err)
+        return err
+    }
+}
 
 /**
  * 
