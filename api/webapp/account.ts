@@ -30,7 +30,6 @@ const mg = mailgun.client({
  */
 export const registerAccount = async (email: string, password: string): Promise<ReturnValue> => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI ?? '')
     const User = mongoose.model('_User', UserSchema, '_User')
     
     // check whether email already exists in the database
