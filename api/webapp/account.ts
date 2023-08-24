@@ -10,6 +10,8 @@ import bcrypt from 'bcrypt'
 import { generateObjectId } from '../../utils/cryptoUtils'
 import crypto from 'crypto'
 import Moralis from 'moralis-v1'
+import { SessionSchema } from '../../schemas/Session'
+import uuid from 'uuid'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
@@ -326,18 +328,48 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       }
     }
 
-    // if the password matches, log the user in and use Moralis's built in session management (for now, to be updated).
-    const user = await Moralis.User.logIn(email, password)
+    // if the password matches, log the user in and store a 7-day session token.
+    const Session = mongoose.model('Session', SessionSchema, 'Session')
+    // gets a `pointer` to the user's object ID in the _User collection.
+    const userPointer = `_User$${userQuery._id}`
 
-    return {
-      status: Status.SUCCESS,
-      message: `Login successful. Redirecting...`,
-      data: {
-        sessionToken: user.get('sessionToken'),
-        uniqueHash: user.get('uniqueHash'),
+    // if query of the user pointer exists, we just log in and do nothing else.
+    const sessionQuery = await Session.findOne({ _p_user: userPointer })
+    if (sessionQuery) {
+      return {
+        status: Status.SUCCESS,
+        message: `Login successful. User's session token is still valid.`,
+        data: {
+          sessionToken: sessionQuery._session_token
+        }
       }
     }
 
+    // otherwise, create a new session for them.
+    // (some are a bit weird just to share similarities with moralis's code for now)
+    const newSession = new Session({
+      _id: generateObjectId(),
+      _session_token: 'r:' + crypto.randomBytes(16).toString('hex'),
+      _p_user: userPointer,
+      createdWith: {
+        action: 'login',
+        authProvider: 'password',
+      },
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      installationId: uuid.v4(),
+      _created_at: Date.now(),
+      _updated_at: Date.now(),
+    })
+
+    await newSession.save()
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Login successful. New session token has just been generated.',
+      data: {
+        sessionToken: newSession._session_token
+      }
+    }
   } catch (err: any) {
     console.log({
       status: Status.ERROR,

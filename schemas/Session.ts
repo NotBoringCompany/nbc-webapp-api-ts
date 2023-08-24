@@ -18,7 +18,19 @@ export const SessionQuerySchema = new mongoose.Schema(
  */
 export const SessionSchema = new mongoose.Schema(
     {
-
+        _id: {
+            type: String,
+            default: new mongoose.Types.ObjectId(),
+        },
+        _session_token: String,
+        // pointer to the user's _User object ID in the _User collection
+        _p_user: String,
+        // either login or signup for `action` and `password` or `moralisEth` for authProvider
+        createdWith: Object,
+        expiresAt: Date,
+        installationId: String,
+        _created_at: Date,
+        _updated_at: Date,
     }, {
         versionKey: false,
     }
