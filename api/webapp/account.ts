@@ -418,5 +418,3 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
     }
   }
 }
-
-emailLogin('suwandresukijat@gmail.com', 'lolhello123')
