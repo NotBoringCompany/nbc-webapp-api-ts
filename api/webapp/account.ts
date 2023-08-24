@@ -123,3 +123,76 @@ export const sendVerificationEmail = async (email: string, verificationLink: str
     }
   }
 }
+
+/**
+ * `verifyToken` verifies whether the token sent to the user to verify their email is valid.
+ * If it is, the user's account will be verified.
+ * If it isn't, the user's account will not be verified and an error will be returned.
+ * @param email the user's email
+ * @param token the verification token to be checked
+ * @returns a ReturnValue instance
+ */
+export const verifyToken = async (email: string, token: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    // if the user doesn't exist, return an error
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User does not exist',
+        data: null
+      }
+    }
+
+    // if the user has already verified their email, return an error
+    if (userQuery.hasVerified) {
+      return {
+        status: Status.ERROR,
+        message: 'User has already verified their email',
+        data: null
+      }
+    }
+
+    // if the token in the DB doesn't match the token sent, return an error
+    if (userQuery.verificationData.verificationToken !== token) {
+      return {
+        status: Status.ERROR,
+        message: 'Invalid token',
+        data: null
+      }
+    }
+
+    // if the token has expired, return an error
+    if (userQuery.verificationData.expiryDate < Date.now()) {
+      return {
+        status: Status.ERROR,
+        message: 'Token has expired',
+        data: null
+      }
+    }
+
+    // if all checks pass, set the user's account to verified
+    userQuery.hasVerified = true
+    await userQuery.save()
+
+    return {
+      status: Status.SUCCESS,
+      message: 'User verified successfully',
+      data: null
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
