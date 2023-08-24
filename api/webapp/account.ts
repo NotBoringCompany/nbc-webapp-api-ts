@@ -78,7 +78,54 @@ export const registerAccount = async (email: string, password: string): Promise<
     return {
       status: Status.SUCCESS,
       message: 'Account created successfully',
+      data: {
+        email: email,
+        verificationToken: verificationData.verificationToken
+      }
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
       data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
+ * `getVerificationData` returns the user's verification data (includes verification token and expiry date) and whether they're verified.
+ * @param email the user's email
+ */
+export const getVerificationData = async (email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    // if user isn't found, we return an error.
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    // if user is found, we return the verification data.
+    return {
+      status: Status.SUCCESS,
+      message: 'Data found',
+      data: {
+        email: email,
+        verificationToken: userQuery.verificationData?.verificationToken,
+        expiryDate: userQuery.verificationData?.expiryDate,
+        hasVerified: userQuery.hasVerified
+      }
     }
   } catch (err: any) {
     console.log({

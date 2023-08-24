@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { emailLogin, registerAccount, verifyToken } from '../../api/webapp/account'
+import { emailLogin, getVerificationData, registerAccount, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 
 const router = express.Router()
@@ -50,6 +50,33 @@ router.post('/verify-token', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Verifying token failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/get-verification-data/:email', async (req: Request, res: Response) => {
+    const { email } = req.params
+
+    try {
+        const { status, message, data } = await getVerificationData(email)
+
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Getting verification data failed.',
+            message: message,
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Getting verification data failed.',
             message: err,
             data: null
         })
