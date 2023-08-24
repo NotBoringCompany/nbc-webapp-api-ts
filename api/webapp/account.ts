@@ -208,6 +208,7 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
  */
 export const emailLogin = async (email: string, password: string): Promise<ReturnValue> => {
   try {
+    await mongoose.connect(process.env.MONGODB_URI ?? '')
     const User = mongoose.model('_User', UserSchema, '_User')
     const userQuery = await User.findOne({ email: email })
 
@@ -229,8 +230,9 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       }
     }
 
+
     // if the user is on a temporary ban, we return an error regardless of password matching.
-    if (!userQuery.loginData.tempBan) {
+    if (userQuery.loginData?.tempBan && !userQuery.loginData?.permanentBan) {
       const unbanDate = new Date(userQuery.loginData.unbanDate!).getTime()
       const now = new Date().getTime()
 
@@ -241,11 +243,20 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       return {
         status: Status.ERROR,
         message: `You have been temporarily banned from logging in for ${timeDiffHours} hours and ${timeDiffMins} minutes. Please try again later`,
+        data: null
+      }
+    }
+
+    if (userQuery.loginData?.tempBan && userQuery.loginData?.permanentBan) {
+      return {
+        status: Status.ERROR,
+        message: 'Your account has been locked from too many unsuccessful attempts. Please contact support.',
+        data: null
       }
     }
 
     // check for password.
-    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password!)
+    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password ?? '')
 
     // if password doesn't match, we add 1 unsuccessful login attempt to the user's loginData and return an error
     if (!passwordMatch) {
@@ -266,28 +277,41 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
         }
       }
 
-      // if the user has loginData and has less than 5 unsuccessful attempts so far, we increment the unsuccessfulAttempts by 1.
-      userQuery.loginData.unsuccessfulAttempts += 1
-      if (userQuery.loginData.unsuccessfulAttempts < 5) {
-        await userQuery.save()
+      const unsuccessfulAttempts = userQuery.loginData.unsuccessfulAttempts
+
+      // if the user so far has less than 4 unsuccessful attempts, we increment by 1.
+      if (unsuccessfulAttempts < 4) {
+        await User.updateOne({ email: email }, { $inc: { 'loginData.unsuccessfulAttempts': 1 } })
+
+        console.log({
+          status: Status.ERROR,
+          message: `Email does not exist or password is incorrect. You have ${4 - userQuery.loginData.unsuccessfulAttempts} more attempt(s). Please try again.`,
+          data: null
+        })
 
         return {
           status: Status.ERROR,
-          message: `Email does not exist or password is incorrect. You have ${5 - userQuery.loginData.unsuccessfulAttempts} more attempt(s). Please try again.`,
+          message: `Email does not exist or password is incorrect. You have ${4 - userQuery.loginData.unsuccessfulAttempts} more attempt(s). Please try again.`,
           data: null
         }
       }
-      // if the user has 5 unsuccessful attempts at this point (or more), we set a temporary ban of 30 minutes.
-      // for every increment of 1 afterwards, we double this duration up to 24 hours.
-      // if the amount has reached 10, we set a permanent ban.
-      // this will be resetted by the scheduler each day.
-      if (userQuery.loginData.unsuccessfulAttempts >= 5) {
-        if (userQuery.loginData.unsuccessfulAttempts === 5) {
-          userQuery.loginData.tempBan = true
-          // 30 minute ban
-          userQuery.loginData.unbanDate = new Date(Date.now() + 30 * 60 * 1000)
 
-          await userQuery.save()
+      // if the user has 4 or more unsuccessful attempts at this point, the next attempt will cause a temporary ban (5th attempt).
+      // for every try the user does after the 5th attempt, the duration of the ban will double.
+      // a scheduler will remove these temporary bans after some time.
+      if (userQuery.loginData.unsuccessfulAttempts >= 4) {
+        if (userQuery.loginData.unsuccessfulAttempts === 4) {
+          await User.updateOne(
+            { email: email },
+            {
+              $inc: { 'loginData.unsuccessfulAttempts': 1 },
+              $set: {
+                'loginData.tempBan': true,
+                'loginData.permanentBan': null,
+                'loginData.unbanDate': new Date(Date.now() + 30 * 60 * 1000)
+              }
+            }
+          )
 
           return {
             status: Status.ERROR,
@@ -297,27 +321,37 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
         }
 
         // if more than 5 attempts, double the duration for every attempt increment.
-        if (userQuery.loginData.unsuccessfulAttempts > 5) {
-          // set this to true regardless, just as a precaution
-          userQuery.loginData.tempBan = true
-          // double the duration for every increment
-          userQuery.loginData.unbanDate = new Date(Date.now() + 30 * 60 * 1000 * (userQuery.loginData.unsuccessfulAttempts - 4))
-
-          await userQuery.save()
+        if (userQuery.loginData.unsuccessfulAttempts > 4) {
+          await User.updateOne(
+            { email: email },
+            {
+              $inc: { 'loginData.unsuccessfulAttempts': 1 },
+              $set: {
+                'loginData.tempBan': true,
+                'loginData.permanentBan': null,
+                'loginData.unbanDate': new Date(Date.now() + 30 * 60 * 1000 * (userQuery.loginData.unsuccessfulAttempts - 3))
+              }
+            }
+          )
 
           return {
             status: Status.ERROR,
-            message: `You have been temporarily banned from logging in for ${30 * (userQuery.loginData.unsuccessfulAttempts - 4)} minutes. Please try again later`,
+            message: `You have been temporarily banned from logging in for ${30 * (userQuery.loginData.unsuccessfulAttempts - 3)} minutes. Please try again later`,
             data: null
           }
         }
 
-        if (userQuery.loginData.unsuccessfulAttempts >= 10) {
-          userQuery.loginData.tempBan = true
-          userQuery.loginData.permanentBan = true
-          userQuery.loginData.unbanDate = null
-
-          await userQuery.save()
+        if (userQuery.loginData.unsuccessfulAttempts >= 9) {
+          await User.updateOne(
+            { email: email },
+            {
+              $set: {
+                'loginData.tempBan': true,
+                'loginData.permanentBan': true,
+                'loginData.unbanDate': null
+              }
+            }
+          )
 
           return {
             status: Status.ERROR,
@@ -384,3 +418,5 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
     }
   }
 }
+
+emailLogin('suwandresukijat@gmail.com', 'lolhello123')
