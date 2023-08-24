@@ -401,6 +401,7 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       status: Status.SUCCESS,
       message: 'Login successful. New session token has just been generated.',
       data: {
+        _p_user: userPointer,
         sessionToken: newSession._session_token
       }
     }
