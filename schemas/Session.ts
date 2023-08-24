@@ -14,6 +14,17 @@ export const SessionQuerySchema = new mongoose.Schema(
 )
 
 /**
+ * Unlike the `SessionQuerySchema`, this includes all fields and is used to create a new session for a user.
+ */
+export const SessionSchema = new mongoose.Schema(
+    {
+
+    }, {
+        versionKey: false,
+    }
+)
+
+/**
  * User schema for querying (only includes fields that are needed for querying)
  */
 export const UserQuerySchema = new mongoose.Schema(

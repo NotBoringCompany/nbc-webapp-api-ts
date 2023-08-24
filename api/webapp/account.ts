@@ -9,6 +9,7 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import { generateObjectId } from '../../utils/cryptoUtils'
 import crypto from 'crypto'
+import Moralis from 'moralis-v1'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
@@ -182,6 +183,161 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
       message: 'User verified successfully',
       data: null
     }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
+ * `emailLogin` logs the user in via email and password.
+ * @param email the user's email
+ * @param password the user's password
+ * @returns a ReturnValue instance
+ */
+export const emailLogin = async (email: string, password: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    // if user does not exist, we return an error (also including that 'password is incorrect' for anonymity)
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'Email does not exist or password is incorrect. Please try again.',
+        data: null
+      }
+    }
+
+    // if a user has not verified their email, we return an error
+    if (!userQuery.hasVerified) {
+      return {
+        status: Status.ERROR,
+        message: 'You have not yet verified your email. You need to verify your email before you can login.',
+        data: null
+      }
+    }
+
+    // if the user is on a temporary ban, we return an error regardless of password matching.
+    if (!userQuery.loginData.tempBan) {
+      const unbanDate = new Date(userQuery.loginData.unbanDate!).getTime()
+      const now = new Date().getTime()
+
+      const diff = unbanDate - now
+
+      const timeDiffMins = Math.floor(diff / 1000 / 60)
+      const timeDiffHours = Math.floor(diff / 1000 / 60 / 60)
+      return {
+        status: Status.ERROR,
+        message: `You have been temporarily banned from logging in for ${timeDiffHours} hours and ${timeDiffMins} minutes. Please try again later`,
+      }
+    }
+
+    // check for password.
+    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password!)
+
+    // if password doesn't match, we add 1 unsuccessful login attempt to the user's loginData and return an error
+    if (!passwordMatch) {
+      // if the user doesn't have loginData yet, we create it and then return an error.
+      if (!userQuery.loginData) {
+        userQuery.loginData = {
+          unsuccessfulAttempts: 1,
+          tempBan: false,
+          unbanDate: null,
+        }
+
+        await userQuery.save()
+
+        return {
+          status: Status.ERROR,
+          message: 'Email does not exist or password is incorrect. You have 4 more attempts. Please try again.',
+          data: null
+        }
+      }
+
+      // if the user has loginData and has less than 5 unsuccessful attempts so far, we increment the unsuccessfulAttempts by 1.
+      userQuery.loginData.unsuccessfulAttempts += 1
+      if (userQuery.loginData.unsuccessfulAttempts < 5) {
+        await userQuery.save()
+
+        return {
+          status: Status.ERROR,
+          message: `Email does not exist or password is incorrect. You have ${5 - userQuery.loginData.unsuccessfulAttempts} more attempt(s). Please try again.`,
+          data: null
+        }
+      }
+      // if the user has 5 unsuccessful attempts at this point (or more), we set a temporary ban of 30 minutes.
+      // for every increment of 1 afterwards, we double this duration up to 24 hours.
+      // if the amount has reached 10, we set a permanent ban.
+      // this will be resetted by the scheduler each day.
+      if (userQuery.loginData.unsuccessfulAttempts >= 5) {
+        if (userQuery.loginData.unsuccessfulAttempts === 5) {
+          userQuery.loginData.tempBan = true
+          // 30 minute ban
+          userQuery.loginData.unbanDate = new Date(Date.now() + 30 * 60 * 1000)
+
+          await userQuery.save()
+
+          return {
+            status: Status.ERROR,
+            message: 'You have been temporarily banned from logging in for 30 minutes. Please try again later',
+            data: null
+          }
+        }
+
+        // if more than 5 attempts, double the duration for every attempt increment.
+        if (userQuery.loginData.unsuccessfulAttempts > 5) {
+          // set this to true regardless, just as a precaution
+          userQuery.loginData.tempBan = true
+          // double the duration for every increment
+          userQuery.loginData.unbanDate = new Date(Date.now() + 30 * 60 * 1000 * (userQuery.loginData.unsuccessfulAttempts - 4))
+
+          await userQuery.save()
+
+          return {
+            status: Status.ERROR,
+            message: `You have been temporarily banned from logging in for ${30 * (userQuery.loginData.unsuccessfulAttempts - 4)} minutes. Please try again later`,
+            data: null
+          }
+        }
+
+        if (userQuery.loginData.unsuccessfulAttempts >= 10) {
+          userQuery.loginData.tempBan = true
+          userQuery.loginData.permanentBan = true
+          userQuery.loginData.unbanDate = null
+
+          await userQuery.save()
+
+          return {
+            status: Status.ERROR,
+            message: 'Your account has been locked from too many unsuccessful attempts. Please contact support.',
+            data: null
+          }
+        }
+      }
+    }
+
+    // if the password matches, log the user in and use Moralis's built in session management (for now, to be updated).
+    const user = await Moralis.User.logIn(email, password)
+
+    return {
+      status: Status.SUCCESS,
+      message: `Login successful. Redirecting...`,
+      data: {
+        sessionToken: user.get('sessionToken'),
+        uniqueHash: user.get('uniqueHash'),
+      }
+    }
+
   } catch (err: any) {
     console.log({
       status: Status.ERROR,

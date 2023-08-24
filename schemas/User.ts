@@ -25,6 +25,8 @@ export const UserSchema = new mongoose.Schema(
         verificationData: Object,
         // checks whether the user has verified their account via email or not.
         hasVerified: Boolean,
+        // checks the amount of invalid attempts the user has made to login within 24 hours and optionally a temporary ban if exceeded.
+        loginData: Object,
     }, {
         versionKey: false,
     }
