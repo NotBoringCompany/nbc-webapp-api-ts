@@ -375,7 +375,8 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
         message: `Login successful. User's session token is still valid.`,
         data: {
           _p_user: userPointer,
-          sessionToken: sessionQuery._session_token
+          sessionToken: sessionQuery._session_token,
+          expiresAt: sessionQuery.expiresAt
         }
       }
     }
@@ -403,7 +404,8 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       message: 'Login successful. New session token has just been generated.',
       data: {
         _p_user: userPointer,
-        sessionToken: newSession._session_token
+        sessionToken: newSession._session_token,
+        expiresAt: newSession.expiresAt,
       }
     }
   } catch (err: any) {
