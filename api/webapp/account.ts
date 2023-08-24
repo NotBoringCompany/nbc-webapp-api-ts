@@ -11,7 +11,7 @@ import { generateObjectId } from '../../utils/cryptoUtils'
 import crypto from 'crypto'
 import Moralis from 'moralis-v1'
 import { SessionSchema } from '../../schemas/Session'
-import uuid from 'uuid'
+import {v4 as uuidv4} from 'uuid'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
@@ -390,7 +390,7 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
         authProvider: 'password',
       },
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      installationId: uuid.v4(),
+      installationId: uuidv4(),
       _created_at: Date.now(),
       _updated_at: Date.now(),
     })
@@ -418,3 +418,5 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
     }
   }
 }
+
+emailLogin('suwandresukijat@gmail.com', 'lol123hello')
