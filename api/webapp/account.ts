@@ -374,6 +374,7 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
         status: Status.SUCCESS,
         message: `Login successful. User's session token is still valid.`,
         data: {
+          _p_user: userPointer,
           sessionToken: sessionQuery._session_token
         }
       }
