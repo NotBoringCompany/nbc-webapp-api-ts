@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { emailLogin, registerAccount, verifyToken } from '../../api/webapp/account'
+import { checkIfVerified, emailLogin, registerAccount, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 
 const router = express.Router()
@@ -77,6 +77,33 @@ router.post('/email-login', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Logging in with email failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/check-if-verified/:email', async (req: Request, res: Response) => {
+    const { email } = req.params
+
+    try {
+        const { status, message, data } = await checkIfVerified(email)
+
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Checking if verified failed.',
+            message: message,
+            data: null
+        }: {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Checking if verified failed.',
             message: err,
             data: null
         })
