@@ -46,7 +46,7 @@ router.post('/verify-token', async (req: Request, res: Response) => {
             message: message,
             data
         })
-    } catch (err) {
+    } catch (err: any) {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Verifying token failed.',
