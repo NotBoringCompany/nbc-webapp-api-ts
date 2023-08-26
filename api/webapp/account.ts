@@ -369,6 +369,9 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
     // gets a `pointer` to the user's object ID in the _User collection.
     const userPointer = `_User$${userQuery._id}`
 
+    // now, update the user's loginData to reset the unsuccessfulAttempts to 0 (only after every successful login).
+    await User.updateOne({ email: email }, { $set: { 'loginData.unsuccessfulAttempts': 0 } })
+
     // if query of the user pointer exists, we just log in and do nothing else.
     const sessionQuery = await Session.findOne({ _p_user: userPointer })
     if (sessionQuery) {
@@ -400,9 +403,6 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
     })
 
     await newSession.save()
-
-    // now, update the user's loginData to reset the unsuccessfulAttempts to 0 (only after every successful login).
-    await User.updateOne({ email: email }, { $set: { 'loginData.unsuccessfulAttempts': 0 } })
 
     return {
       status: Status.SUCCESS,
