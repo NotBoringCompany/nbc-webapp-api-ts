@@ -24,7 +24,9 @@ const appId: string = process.env.MORALIS_APPID ?? ''
 const masterKey: string = process.env.MORALIS_MASTERKEY ?? ''
 
 /** EXPRESS MIDDLEWARES */
-app.use(cors())
+app.use(cors({
+    origin: ['http://localhost:3000', 'https://webapp.nbcompany.io'] // only temporary 
+}))
 app.use(express.json())
 app.use(cookieParser())
 app.use(session({
