@@ -23,9 +23,11 @@ const serverUrl: string = process.env.MORALIS_SERVERURL ?? ''
 const appId: string = process.env.MORALIS_APPID ?? ''
 const masterKey: string = process.env.MORALIS_MASTERKEY ?? ''
 
+export const ALLOWED_ORIGINS = ['http://localhost:3000', 'https://webapp.nbcompany.io'] //localhost only temporary
+
 /** EXPRESS MIDDLEWARES */
 app.use(cors({
-    origin: ['http://localhost:3000', 'https://webapp.nbcompany.io'], // only temporary 
+    origin: ALLOWED_ORIGINS,
     credentials: true
 }))
 app.use(express.json())

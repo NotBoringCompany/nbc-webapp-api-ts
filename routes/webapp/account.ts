@@ -2,10 +2,17 @@ import express, { Request, Response } from 'express'
 import { checkIfVerified, emailLogin, registerAccount, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
+import { ALLOWED_ORIGINS } from '../../server'
 
 const router = express.Router()
 
-router.get('/check-auth', (req: Request, res: Response) => {
+router.get('/check-auth', (req: Request, res: Response) => {    
+    const origin = req.headers.origin;
+    if (ALLOWED_ORIGINS.includes(origin)) {
+        res.header('Access-Control-Allow-Origin', origin);
+        res.header('Access-Control-Allow-Credentials', 'true');
+    }
+    
     if (req.session.user) {
         // user is authenticated
         res.status(200).json({
@@ -90,7 +97,7 @@ router.post('/email-login', async (req: Request, res: Response) => {
         const { status, message, data } = await emailLogin(req, email, password)
 
         res.header('Access-Control-Allow-Credentials', 'true');
-        
+
         res.json(status === Status.ERROR ? {
             status,
             error: 'Logging in with email failed.',
