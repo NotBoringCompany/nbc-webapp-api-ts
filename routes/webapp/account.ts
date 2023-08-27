@@ -1,16 +1,33 @@
 import express, { Request, Response } from 'express'
 import { checkIfVerified, emailLogin, registerAccount, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
+import { checkAuth } from '../../middlewares/checkAuth'
 
 const router = express.Router()
 
 router.get('/check-auth', (req: Request, res: Response) => {
     if (req.session.user) {
         // user is authenticated
-        res.status(200).json({ isAuthenticated: true, user: req.session.user })
+        res.status(200).json({
+            status: Status.SUCCESS,
+            error: null,
+            message: 'User is authenticated.',
+            data: {
+                isAuthenticated: true,
+                user: req.session.user
+            }
+         })
     } else {
         // user is not authenticated
-        res.status(401).json({ isAuthenticated: false, user: null })
+        res.status(401).json({ 
+            status: Status.ERROR,
+            error: 'User is not authenticated.',
+            message: 'User is not authenticated.',
+            data: {
+                isAuthenticated: false,
+                user: null
+            }
+        })
     }
 })
 
@@ -91,6 +108,27 @@ router.post('/email-login', async (req: Request, res: Response) => {
             data: null
         })
     }
+})
+
+router.post('/email-logout', checkAuth, async (req: Request, res: Response) => {
+    req.session.destroy((err: Error) => {
+        if (err) {
+            console.error('Error destroying session: ', err)
+            res.status(Status.ERROR).json({
+                status: Status.ERROR,
+                error: 'Logging out failed.',
+                message: err,
+                data: null
+            })
+        } else {
+            res.status(Status.SUCCESS).json({
+                status: Status.SUCCESS,
+                error: null,
+                message: 'Successfully logged out.',
+                data: null
+            })
+        }
+    })
 })
 
 router.get('/check-if-verified/:email', async (req: Request, res: Response) => {

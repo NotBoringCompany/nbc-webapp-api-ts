@@ -392,57 +392,6 @@ export const emailLogin = async (req: Request, email: string, password: string):
 }
 
 /**
- * `emailLogout` logs the user out via email.
- * @param email the user's email
- * @returns a ReturnValue instance
- */
-export const emailLogout = async (email: string): Promise<ReturnValue> => {
-  try {
-    const User = mongoose.model('_User', UserSchema, '_User')
-    const userQuery = await User.findOne({ email: email })
-
-    if (!userQuery) {
-      return {
-        status: Status.ERROR,
-        message: 'User not found',
-        data: null
-      }
-    }
-
-    const Session = mongoose.model('_Session', SessionSchema, '_Session')
-    const sessionQuery = await Session.findOne({ _p_user: `_User$${userQuery._id}` })
-
-    if (!sessionQuery) {
-      return {
-        status: Status.ERROR,
-        message: 'No available sessions to log out from',
-        data: null
-      }
-    }
-
-    await sessionQuery.deleteOne()
-
-    return {
-      status: Status.SUCCESS,
-      message: 'Session removed and logged out successfully',
-      data: null
-    }
-  } catch (err: any) {
-    console.log({
-      status: Status.ERROR,
-      message: err,
-      data: null
-    })
-
-    return {
-      status: Status.ERROR,
-      message: err,
-      data: null
-    }
-  }
-}
-
-/**
  * `checkIfVerified` checks whether the user has verified their email.
  * @param email the user's email
  */
