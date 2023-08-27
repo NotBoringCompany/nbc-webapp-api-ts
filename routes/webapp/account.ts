@@ -4,6 +4,16 @@ import { Status } from '../../utils/retVal'
 
 const router = express.Router()
 
+router.get('/check-auth', (req: Request, res: Response) => {
+    if (req.session.user) {
+        // user is authenticated
+        res.status(200).json({ isAuthenticated: true, user: req.session.user })
+    } else {
+        // user is not authenticated
+        res.status(401).json({ isAuthenticated: false, user: null })
+    }
+})
+
 router.post('/register-account', async (req: Request, res: Response) => {
     const { email, password } = req.body
 
