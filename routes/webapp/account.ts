@@ -98,30 +98,40 @@ router.post('/email-login', async (req: Request, res: Response) => {
     const { email, password } = req.body
 
     try {
-        const { status, message, data } = await emailLogin(req, email, password)
-
+        const { status, message, data } = await emailLogin(req, email, password);
+        
         res.header('Access-Control-Allow-Credentials', 'true');
 
-        res.json(status === Status.ERROR ? {
-            status,
-            error: 'Logging in with email failed.',
-            message: message,
-            data: null
-        }: {
-            status,
-            error: null,
-            message: message,
-            data
-        })
+        if (status === Status.ERROR) {
+            res.status(200).json({
+                status,
+                error: 'Logging in with email failed.',
+                message: message,
+                data: null
+            });
+        } else {
+            res.cookie('session', data, {
+                httpOnly: true,
+                secure: true,
+                sameSite: 'strict'
+            });
+
+            res.status(200).json({
+                status,
+                error: null,
+                message: message,
+                data
+            });
+        }
     } catch (err: any) {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Logging in with email failed.',
             message: err,
             data: null
-        })
+        });
     }
-})
+});
 
 router.post('/email-logout', checkAuth, async (req: Request, res: Response) => {
     req.session.destroy((err: Error) => {
