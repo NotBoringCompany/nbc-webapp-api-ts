@@ -6,41 +6,51 @@ import { ALLOWED_ORIGINS } from '../../server'
 
 const router = express.Router()
 
-router.get('/check-auth', (req: Request, res: Response) => {    
-    const origin = req.headers.origin;
-    console.log('origin: ', origin)
-    if (ALLOWED_ORIGINS.includes(origin)) {
-        console.log('origin is allowed')
-        res.header('Access-Control-Allow-Origin', origin);
-        res.header('Access-Control-Allow-Credentials', 'true');
-    }
+router.get('/check-auth', (req: Request, res: Response) => {
+    try {
+        const origin = req.headers.origin;
+        console.log('origin: ', origin)
+        if (ALLOWED_ORIGINS.includes(origin)) {
+            console.log('origin is allowed')
+            res.header('Access-Control-Allow-Origin', origin);
+            res.header('Access-Control-Allow-Credentials', 'true');
+        }
 
-    console.log('req.session.user: ', req.session.user)
+        console.log('req.session.user: ', req.session.user)
 
-    if (req.session.user) {
-        // user is authenticated
-        res.status(200).json({
-            status: Status.SUCCESS,
-            error: null,
-            message: 'User is authenticated.',
-            data: {
-                isAuthenticated: true,
-                user: req.session.user
-            }
-         })
-    } else {
-        // user is not authenticated
-        res.status(401).json({ 
+        if (req.session.user) {
+            // user is authenticated
+            res.status(200).json({
+                status: Status.SUCCESS,
+                error: null,
+                message: 'User is authenticated.',
+                data: {
+                    isAuthenticated: true,
+                    user: req.session.user
+                }
+            })
+        } else {
+            // user is not authenticated
+            res.status(401).json({
+                status: Status.ERROR,
+                error: 'User is not authenticated.',
+                message: 'User is not authenticated.',
+                data: {
+                    isAuthenticated: false,
+                    user: null
+                }
+            })
+        }
+    } catch (error) {
+        console.error('Error in check-auth:', error);
+        res.status(500).json({
             status: Status.ERROR,
-            error: 'User is not authenticated.',
-            message: 'User is not authenticated.',
-            data: {
-                isAuthenticated: false,
-                user: null
-            }
-        })
+            error: 'Internal Server Error',
+            message: 'An internal server error occurred.',
+            data: null
+        });
     }
-})
+});
 
 router.post('/register-account', async (req: Request, res: Response) => {
     const { email, password } = req.body
