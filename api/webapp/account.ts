@@ -375,6 +375,7 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       status: Status.SUCCESS,
       message: 'Login successful. JWT token generated.',
       data: {
+        email: userQuery.email,
         token: token,
       }
     }
