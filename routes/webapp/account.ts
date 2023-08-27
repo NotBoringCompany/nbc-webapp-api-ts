@@ -60,7 +60,7 @@ router.post('/email-login', async (req: Request, res: Response) => {
     const { email, password } = req.body
 
     try {
-        const { status, message, data } = await emailLogin(email, password)
+        const { status, message, data } = await emailLogin(req, email, password)
 
         res.json(status === Status.ERROR ? {
             status,

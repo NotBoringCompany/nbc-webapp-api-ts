@@ -4,6 +4,8 @@ import express from 'express'
 import cors from 'cors'
 import Moralis from 'moralis-v1/node'
 import mongoose from 'mongoose'
+import session from 'express-session'
+import cookieParser from 'cookie-parser'
 
 dotenv.config({ path: path.join(__dirname, '.env') })
 
@@ -24,6 +26,17 @@ const masterKey: string = process.env.MORALIS_MASTERKEY ?? ''
 /** EXPRESS MIDDLEWARES */
 app.use(cors())
 app.use(express.json())
+app.use(cookieParser())
+app.use(session({
+    secret: process.env.SESSION_SECRET ?? '',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        httpOnly: true,
+        secure: true,
+        maxAge: 24 * 60 * 60 * 1000,
+    }
+}))
 /** END OF EXPRESS MIDDLEWARES */
 
 /** ROUTES */

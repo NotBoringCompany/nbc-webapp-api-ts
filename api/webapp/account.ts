@@ -9,9 +9,8 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import { generateObjectId } from '../../utils/cryptoUtils'
 import crypto from 'crypto'
-import Moralis from 'moralis-v1'
 import { SessionSchema } from '../../schemas/Session'
-import {v4 as uuidv4} from 'uuid'
+import { Request } from 'express'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
@@ -208,7 +207,7 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
  * @param password the user's password
  * @returns a ReturnValue instance
  */
-export const emailLogin = async (email: string, password: string): Promise<ReturnValue> => {
+export const emailLogin = async (req: Request, email: string, password: string): Promise<ReturnValue> => {
   try {
     await mongoose.connect(process.env.MONGODB_URI ?? '')
     const User = mongoose.model('_User', UserSchema, '_User')
@@ -364,54 +363,69 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       }
     }
 
-    // if the password matches, log the user in and store a 7-day session token.
-    const Session = mongoose.model('Session', SessionSchema, 'Session')
-    // gets a `pointer` to the user's object ID in the _User collection.
-    const userPointer = `_User$${userQuery._id}`
-
-    // now, update the user's loginData to reset the unsuccessfulAttempts to 0 (only after every successful login).
-    await User.updateOne({ email: email }, { $set: { 'loginData.unsuccessfulAttempts': 0 } })
-
-    // if query of the user pointer exists, we just log in and do nothing else.
-    const sessionQuery = await Session.findOne({ _p_user: userPointer })
-    if (sessionQuery) {
-      return {
-        status: Status.SUCCESS,
-        message: `Login successful. User's session token is still valid.`,
-        data: {
-          _p_user: userPointer,
-          sessionToken: sessionQuery._session_token,
-          expiresAt: sessionQuery.expiresAt
-        }
-      }
+    // if the password matches, log the user in and store their session using `express-session`
+    const userSession = {
+      id: userQuery._id,
+      email: userQuery.email,
     }
 
-    // otherwise, create a new session for them.
-    // (some are a bit weird just to share similarities with moralis's code for now)
-    const newSession = new Session({
-      _id: generateObjectId(),
-      _session_token: 'r:' + crypto.randomBytes(16).toString('hex'),
-      _p_user: userPointer,
-      createdWith: {
-        action: 'login',
-        authProvider: 'password',
-      },
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-      installationId: uuidv4(),
-      _created_at: Date.now(),
-      _updated_at: Date.now(),
-    })
-
-    await newSession.save()
+    req.session.user = userSession
 
     return {
       status: Status.SUCCESS,
-      message: 'Login successful. New session token has just been generated.',
-      data: {
-        _p_user: userPointer,
-        sessionToken: newSession._session_token,
-        expiresAt: newSession.expiresAt,
+      message: 'Login successful. Session stored in cookie.',
+      data: null
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
+ * `emailLogout` logs the user out via email.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const emailLogout = async (email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
       }
+    }
+
+    const Session = mongoose.model('_Session', SessionSchema, '_Session')
+    const sessionQuery = await Session.findOne({ _p_user: `_User$${userQuery._id}` })
+
+    if (!sessionQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'No available sessions to log out from',
+        data: null
+      }
+    }
+
+    await sessionQuery.deleteOne()
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Session removed and logged out successfully',
+      data: null
     }
   } catch (err: any) {
     console.log({
