@@ -8,11 +8,14 @@ const router = express.Router()
 
 router.get('/check-auth', (req: Request, res: Response) => {    
     const origin = req.headers.origin;
+    console.log('origin: ', origin)
     if (ALLOWED_ORIGINS.includes(origin)) {
         res.header('Access-Control-Allow-Origin', origin);
         res.header('Access-Control-Allow-Credentials', 'true');
     }
-    
+
+    console.log('req.session.user: ', req.session.user)
+
     if (req.session.user) {
         // user is authenticated
         res.status(200).json({
