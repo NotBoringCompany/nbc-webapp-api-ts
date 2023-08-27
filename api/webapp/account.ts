@@ -11,6 +11,7 @@ import { generateObjectId } from '../../utils/cryptoUtils'
 import crypto from 'crypto'
 import { SessionSchema } from '../../schemas/Session'
 import { Request } from 'express'
+import jwt from 'jsonwebtoken'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
 
@@ -207,7 +208,7 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
  * @param password the user's password
  * @returns a ReturnValue instance
  */
-export const emailLogin = async (req: Request, email: string, password: string): Promise<ReturnValue> => {
+export const emailLogin = async (email: string, password: string): Promise<ReturnValue> => {
   try {
     await mongoose.connect(process.env.MONGODB_URI ?? '')
     const User = mongoose.model('_User', UserSchema, '_User')
@@ -363,18 +364,19 @@ export const emailLogin = async (req: Request, email: string, password: string):
       }
     }
 
-    // if the password matches, log the user in and store their session using `express-session`
-    const userSession = {
-      id: userQuery._id,
-      email: userQuery.email,
-    }
-
-    req.session.user = userSession
+    // if the password matches, log the user in and generate a JWT token.
+    const token = jwt.sign(
+      { userId: userQuery._id, email: userQuery.email },
+      process.env.JWT_SECRET ?? '',
+      { expiresIn: '1h' }
+    )
 
     return {
       status: Status.SUCCESS,
-      message: 'Login successful. Session stored in cookie.',
-      data: req.session.user
+      message: 'Login successful. JWT token generated.',
+      data: {
+        token: token,
+      }
     }
   } catch (err: any) {
     console.log({
