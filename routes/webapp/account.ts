@@ -10,6 +10,7 @@ router.get('/check-auth', (req: Request, res: Response) => {
     const origin = req.headers.origin;
     console.log('origin: ', origin)
     if (ALLOWED_ORIGINS.includes(origin)) {
+        console.log('origin is allowed')
         res.header('Access-Control-Allow-Origin', origin);
         res.header('Access-Control-Allow-Credentials', 'true');
     }
