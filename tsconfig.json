@@ -1,4 +1,7 @@
 {
+    "ts-node": {
+        "files": true
+      },
     "compilerOptions": {
       "typeRoots": ["./typings", "node_modules/@types"],
       "esModuleInterop": true
