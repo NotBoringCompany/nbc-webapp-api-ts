@@ -89,6 +89,8 @@ router.post('/email-login', async (req: Request, res: Response) => {
     try {
         const { status, message, data } = await emailLogin(req, email, password)
 
+        res.header('Access-Control-Allow-Credentials', 'true');
+        
         res.json(status === Status.ERROR ? {
             status,
             error: 'Logging in with email failed.',
