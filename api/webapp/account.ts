@@ -374,7 +374,7 @@ export const emailLogin = async (req: Request, email: string, password: string):
     return {
       status: Status.SUCCESS,
       message: 'Login successful. Session stored in cookie.',
-      data: null
+      data: req.session.user
     }
   } catch (err: any) {
     console.log({
