@@ -41,7 +41,7 @@ app.use(session({
         httpOnly: true,
         secure: true,
         maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'strict',
+        sameSite: true,
     }
 }))
 /** END OF EXPRESS MIDDLEWARES */
