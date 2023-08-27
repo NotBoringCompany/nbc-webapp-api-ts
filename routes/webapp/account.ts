@@ -114,6 +114,7 @@ router.post('/email-login', async (req: Request, res: Response) => {
                 httpOnly: true,
                 secure: true,
                 maxAge: 24 * 60 * 60 * 1000,
+                sameSite: 'none',
             });
 
             res.status(200).json({
