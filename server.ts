@@ -33,6 +33,7 @@ app.use(cors({
 app.use(express.json())
 app.use(cookieParser())
 app.use(session({
+    name: 'session',
     secret: process.env.SESSION_SECRET ?? '',
     resave: false,
     saveUninitialized: false,

@@ -99,7 +99,7 @@ router.post('/email-login', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await emailLogin(req, email, password);
-        
+
         res.header('Access-Control-Allow-Credentials', 'true');
 
         if (status === Status.ERROR) {
@@ -113,7 +113,7 @@ router.post('/email-login', async (req: Request, res: Response) => {
             res.cookie('session', data, {
                 httpOnly: true,
                 secure: true,
-                sameSite: 'strict'
+                maxAge: 24 * 60 * 60 * 1000,
             });
 
             res.status(200).json({
