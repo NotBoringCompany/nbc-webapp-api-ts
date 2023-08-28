@@ -71,7 +71,7 @@ export const registerAccount = async (email: string, password: string): Promise<
     await newUser.save()
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?email=${email}&token=${verificationData.verificationToken}`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}`)
 
     return {
       status: Status.SUCCESS,
@@ -186,7 +186,7 @@ export const createVerificationToken = async (email: string, password?: string, 
     await User.updateOne({ email: email }, { $set: { verificationData: verificationData } })
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?email=${email}&token=${verificationData.verificationToken}`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}`)
 
     return {
       status: Status.SUCCESS,
