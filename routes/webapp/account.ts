@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { checkIfVerified, emailLogin, registerAccount, verifyToken } from '../../api/webapp/account'
+import { checkIfVerified, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -98,6 +98,60 @@ router.post('/verify-token', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Verifying token failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.post('create-verification-token', async (req: Request, res: Response) => {
+    const { email, jwtToken } = req.body
+
+    try {
+        const { status, message, data } = await createVerificationToken(email, jwtToken)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Creating verification token failed.',
+            message: message,
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Creating verification token failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.post('verify-jwt-token', async (req: Request, res: Response) => {
+    const { token } = req.body
+    try {
+        const decodedToken = verifyJwtToken(token)
+        
+        decodedToken ? res.status(200).json({
+            status: Status.SUCCESS,
+            error: null,
+            message: 'Verifying JWT token successful.',
+            data: {
+                decodedToken
+            }
+        }) : res.status(401).json({
+            status: Status.ERROR,
+            error: 'Verifying JWT token failed.',
+            message: 'Verifying JWT token failed.',
+            data: null
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Verifying JWT token failed.',
             message: err,
             data: null
         })

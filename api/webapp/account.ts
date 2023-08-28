@@ -9,8 +9,6 @@ import mongoose from 'mongoose'
 import bcrypt from 'bcrypt'
 import { generateObjectId } from '../../utils/cryptoUtils'
 import crypto from 'crypto'
-import { SessionSchema } from '../../schemas/Session'
-import { Request } from 'express'
 import jwt from 'jsonwebtoken'
 
 dotenv.config({ path: path.join(__dirname, '../../.env') })
@@ -31,7 +29,7 @@ const mg = mailgun.client({
 export const registerAccount = async (email: string, password: string): Promise<ReturnValue> => {
   try {
     const User = mongoose.model('_User', UserSchema, '_User')
-    
+
     // check whether email already exists in the database
     // if it does, return an error
     // if it doesn't, continue.
@@ -73,7 +71,7 @@ export const registerAccount = async (email: string, password: string): Promise<
     await newUser.save()
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?token=${verificationData.verificationToken}`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?email=${email}&token=${verificationData.verificationToken}`)
 
     return {
       status: Status.SUCCESS,
@@ -95,6 +93,122 @@ export const registerAccount = async (email: string, password: string): Promise<
       message: err,
       data: null
     }
+  }
+}
+
+/**
+ * `createVerificationToken` manually creates a verification token for non-verified emails
+ * 
+ * requires a JWT token to ensure that only authorized users can create a verification token for a user's email.
+ * 
+ * this should only be called for emails that have been registered before Aug 25 2023 (when we updated the account registration to include verification tokens)
+ * 
+ * all emails prior to aug 25 will not have a verification token and is required to have one, hence this function.
+ * 
+ * this function includes checks and ensures that the verification token won't be sent if any of the checks fail.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const createVerificationToken = async (email: string, jwtToken: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    // if user isn't found, then we return an error
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    // if the user has already verified their email, we return an error
+    if (userQuery.hasVerified) {
+      return {
+        status: Status.ERROR,
+        message: 'User has already verified their email',
+        data: null
+      }
+    }
+
+    // if the user has a verification token, we return an error
+    if (userQuery.verificationData.verificationToken) {
+      return {
+        status: Status.ERROR,
+        message: 'User already has a verification token',
+        data: null
+      }
+    }
+
+    // if the user has no verification token, first check if the JWT token provided is valid
+    const decodedToken = verifyJwtToken(jwtToken)
+
+    // if the JWT token is invalid, we return an error
+    if (!decodedToken) {
+      return {
+        status: Status.ERROR,
+        message: 'Unauthorized to send verification email.',
+        data: null
+      }
+    }
+
+    // if JWT is valid, we create the verification data and save it to the database
+    const verificationData = {
+      // the verification token
+      verificationToken: crypto.randomBytes(150).toString('hex'),
+      // 24 hour validity
+      expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    }
+
+    // add the verification token to the user's doc
+    userQuery.verificationData = verificationData
+
+    // save the user's doc
+    await userQuery.save()
+
+    // send the verification email to the user
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?email=${email}&token=${verificationData.verificationToken}`)
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Verification token created successfully. An email has been sent to the user.',
+      data: null,
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
+ * `verifyJwtToken` verifies whether the JWT token specified is valid.
+ * @param token the JWT token to verify
+ * @returns a string if the token is valid, null if the token is invalid
+ */
+export const verifyJwtToken = (token: string): string | jwt.JwtPayload => {
+  try {
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET ?? '')
+
+    // if valid, return decodedToken
+    return decodedToken
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return null
   }
 }
 
@@ -416,7 +530,9 @@ export const checkIfVerified = async (email: string): Promise<ReturnValue> => {
       return {
         status: Status.SUCCESS,
         message: 'User has already verified their email',
-        data: null
+        data: {
+          verified: true,
+        }
       }
     }
 
@@ -424,7 +540,9 @@ export const checkIfVerified = async (email: string): Promise<ReturnValue> => {
       return {
         status: Status.SUCCESS,
         message: 'User has not verified their email',
-        data: null
+        data: {
+          verified: false,
+        }
       }
     }
 
