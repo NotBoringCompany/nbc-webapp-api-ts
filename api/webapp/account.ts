@@ -405,7 +405,7 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
     }
 
     // check for password.
-    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password ?? '')
+    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
 
     // if password doesn't match, we add 1 unsuccessful login attempt to the user's loginData and return an error
     if (!passwordMatch) {
