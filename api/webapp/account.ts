@@ -99,7 +99,7 @@ export const registerAccount = async (email: string, password: string): Promise<
 /**
  * `createVerificationToken` manually creates a verification token for non-verified emails
  * 
- * requires a JWT token to ensure that only authorized users can create a verification token for a user's email.
+ * requires a JWT token OR their password to ensure that only authorized users can create a verification token for a user's email.
  * 
  * this should only be called for emails that have been registered before Aug 25 2023 (when we updated the account registration to include verification tokens)
  * 
@@ -109,8 +109,16 @@ export const registerAccount = async (email: string, password: string): Promise<
  * @param email the user's email
  * @returns a ReturnValue instance
  */
-export const createVerificationToken = async (email: string, jwtToken: string): Promise<ReturnValue> => {
+export const createVerificationToken = async (email: string, password?: string, jwtToken?: string): Promise<ReturnValue> => {
   try {
+    if (!password || !jwtToken) {
+      return {
+        status: Status.ERROR,
+        message: 'Unauthorized to send verification email. Requires at least a password or jwtToken',
+        data: null
+      }
+    }
+
     const User = mongoose.model('_User', UserSchema, '_User')
     const userQuery = await User.findOne({ email: email })
 
@@ -141,19 +149,31 @@ export const createVerificationToken = async (email: string, jwtToken: string): 
       }
     }
 
-    // if the user has no verification token, first check if the JWT token provided is valid
-    const decodedToken = verifyJwtToken(jwtToken)
-
-    // if the JWT token is invalid, we return an error
-    if (!decodedToken) {
-      return {
-        status: Status.ERROR,
-        message: 'Unauthorized to send verification email.',
-        data: null
+    // if password exists, then we go with the password route.
+    if (password) {
+      const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password ?? '')
+      if (!passwordMatch) {
+        return {
+          status: Status.ERROR,
+          message: 'Unauthorized to send verification email. False password.',
+          data: null
+        }
       }
+    } else if (jwtToken) {
+      // if the user has no verification token, first check if the JWT token provided is valid
+      const decodedToken = verifyJwtToken(jwtToken)
+
+      // if the JWT token is invalid, we return an error
+      if (!decodedToken) {
+        return {
+          status: Status.ERROR,
+          message: 'Unauthorized to send verification email. False JWT token.',
+          data: null
+        }
+      } 
     }
 
-    // if JWT is valid, we create the verification data and save it to the database
+    // if either password/jwt token is valid, we create the verification data and save it to the database
     const verificationData = {
       // the verification token
       verificationToken: crypto.randomBytes(150).toString('hex'),
@@ -333,6 +353,20 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       return {
         status: Status.ERROR,
         message: 'Email does not exist or password is incorrect. Please try again.',
+        data: null
+      }
+    }
+
+    // if a user has not verified their token but doesn't have a verification token yet, that means that their account is created before aug 25.
+    // we send them a verification email here.
+    if (!userQuery.hasVerified && !userQuery.verificationData) {
+      // if all checks pass, create a token and send the verification email
+      // at this point, once the email is sent, this block shouldnt be passed through again since `verificationData` will exist.
+      // it will therefore move forward to the next block check.
+      const createToken = await createVerificationToken(email, password)
+      return {
+        status: Status.ERROR,
+        message: `You have not verified your email. We've just sent you a verification email. Please check your inbox.`,
         data: null
       }
     }
