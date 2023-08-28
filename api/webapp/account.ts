@@ -695,3 +695,43 @@ export const checkVerificationStatus = async (email: string): Promise<ReturnValu
     }
   }
 }
+
+/**
+ * `checkWalletExists` checks whether the user has a wallet address.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const checkWalletExists = async (email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Successfully checked wallet',
+      data: {
+        wallet: userQuery.ethAddress,
+      }
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}

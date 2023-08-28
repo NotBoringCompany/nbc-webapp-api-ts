@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { checkIfVerificationTokenExists, checkIfVerified, checkVerificationStatus, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken } from '../../api/webapp/account'
+import { checkIfVerificationTokenExists, checkIfVerified, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -259,6 +259,32 @@ router.get('/check-verification-status/:email', async (req: Request, res: Respon
         res.status(500).json({
             status: Status.ERROR,
             error: 'Checking verification status failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/check-wallet-exists/:email', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.params
+        const { status, message, data } = await checkWalletExists(email)
+
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Checking wallet exists failed.',
+            message: message,
+            data: null
+        }: {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Checking wallet exists failed.',
             message: err,
             data: null
         })
