@@ -141,7 +141,7 @@ export const createVerificationToken = async (email: string, password?: string, 
     }
 
     // if the user has a verification token, we return an error
-    if (userQuery.verificationData.verificationToken) {
+    if (userQuery.verificationData) {
       return {
         status: Status.ERROR,
         message: 'User already has a verification token',
