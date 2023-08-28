@@ -509,6 +509,62 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
 }
 
 /**
+ * `checkIfVerificationTokenExists` checks whether the user has a verification token.
+ * 
+ * this check is mainly used for accounts that were created with metamask and before 25 august.
+ * 
+ * this is because these accounts will NOT have a verification token, and will need to have one created for them to verify their email to be able to log in via email.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const checkIfVerificationTokenExists = async (email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    if (userQuery.verificationData.verificationToken) {
+      return {
+        status: Status.SUCCESS,
+        message: 'User has a verification token',
+        data: {
+          hasVerificationToken: true,
+        }
+      }
+    }
+
+    if (!userQuery.verificationData.verificationToken) {
+      return {
+        status: Status.SUCCESS,
+        message: 'User does not have a verification token',
+        data: {
+          hasVerificationToken: false,
+        }
+      }
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `checkIfVerified` checks whether the user has verified their email.
  * @param email the user's email
  */
@@ -563,5 +619,45 @@ export const checkIfVerified = async (email: string): Promise<ReturnValue> => {
       message: err,
       data: null
     }
+  }
+}
+
+/**
+ * `checkVerificationStatus` combines both `checkIfVerificationExists` and `checkIfVerified` to check whether the user has verified their email.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const checkVerificationStatus = async (email: string): Promise<ReturnValue> => {
+  try {
+    const verificationTokenExists = await checkIfVerificationTokenExists(email)
+    const verified = await checkIfVerified(email)
+
+    if (verificationTokenExists.status === Status.ERROR || verified.status === Status.ERROR) {
+      return {
+        status: Status.ERROR,
+        message: 'Something went wrong: verificationTokenExists:' + verificationTokenExists.message + ' verified: ' + verified.message,
+        data: null
+      }
+    }
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Successfully checked verification status',
+      data: {
+        hasVerificationToken: verificationTokenExists.data?.hasVerificationToken,
+        verified: verified.data?.verified,
+      }
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
   }
 }

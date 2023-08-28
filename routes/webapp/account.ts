@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { checkIfVerified, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken } from '../../api/webapp/account'
+import { checkIfVerificationTokenExists, checkIfVerified, checkVerificationStatus, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -207,6 +207,58 @@ router.get('/check-if-verified/:email', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Checking if verified failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/check-if-verification-token-exists/:email', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.params
+        const { status, message, data } = await checkIfVerificationTokenExists(email)
+
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Checking if verification token exists failed.',
+            message: message,
+            data: null
+        }: {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Checking if verification token exists failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/check-verification-status/:email', async (req: Request, res: Response) => {
+    try {
+        const { email } = req.params
+        const { status, message, data } = await checkVerificationStatus(email)
+
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Checking verification status failed.',
+            message: message,
+            data: null
+        }: {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Checking verification status failed.',
             message: err,
             data: null
         })
