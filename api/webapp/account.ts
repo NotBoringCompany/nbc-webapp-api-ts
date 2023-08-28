@@ -151,7 +151,8 @@ export const createVerificationToken = async (email: string, password?: string, 
 
     // if password exists, then we go with the password route.
     if (password) {
-      const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password ?? '')
+      // apparently, when hashes start with '$2y', they need to be replaced to '$2a'.
+      const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
       if (!passwordMatch) {
         return {
           status: Status.ERROR,
