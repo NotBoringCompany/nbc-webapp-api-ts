@@ -659,5 +659,6 @@ export const checkVerificationStatus = async (email: string): Promise<ReturnValu
       status: Status.ERROR,
       message: err,
       data: null
+    }
   }
 }
