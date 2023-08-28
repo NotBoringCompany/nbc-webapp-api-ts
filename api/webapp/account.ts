@@ -361,6 +361,7 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       // at this point, once the email is sent, this block shouldnt be passed through again since `verificationData` will exist.
       // it will therefore move forward to the next block check.
       const createToken = await createVerificationToken(email, password)
+      console.log(createToken)
       return {
         status: Status.ERROR,
         message: `You have not verified your email. We've just sent you a verification email. Please check your inbox.`,
