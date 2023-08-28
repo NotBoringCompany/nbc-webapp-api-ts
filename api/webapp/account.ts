@@ -111,7 +111,7 @@ export const registerAccount = async (email: string, password: string): Promise<
  */
 export const createVerificationToken = async (email: string, password?: string, jwtToken?: string): Promise<ReturnValue> => {
   try {
-    if (!password || !jwtToken) {
+    if (!password && !jwtToken) {
       return {
         status: Status.ERROR,
         message: 'Unauthorized to send verification email. Requires at least a password or jwtToken',
