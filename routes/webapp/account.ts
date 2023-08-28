@@ -151,7 +151,7 @@ router.post('/verify-jwt-token', async (req: Request, res: Response) => {
     } catch (err: any) {
         res.status(500).json({
             status: Status.ERROR,
-            error: 'Verifying JWT token failed.',
+            error: 'Verifying JWT token failed. JWT probably is expired.',
             message: err,
             data: null
         })
