@@ -104,7 +104,7 @@ router.post('/verify-token', async (req: Request, res: Response) => {
     }
 })
 
-router.post('create-verification-token', async (req: Request, res: Response) => {
+router.post('/create-verification-token', async (req: Request, res: Response) => {
     const { email, jwtToken } = req.body
 
     try {
@@ -130,7 +130,7 @@ router.post('create-verification-token', async (req: Request, res: Response) => 
     }
 })
 
-router.post('verify-jwt-token', async (req: Request, res: Response) => {
+router.post('/verify-jwt-token', async (req: Request, res: Response) => {
     const { token } = req.body
     try {
         const decodedToken = verifyJwtToken(token)
