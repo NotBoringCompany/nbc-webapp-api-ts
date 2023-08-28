@@ -182,10 +182,7 @@ export const createVerificationToken = async (email: string, password?: string, 
     }
 
     // add the verification token to the user's doc
-    userQuery.verificationData = verificationData
-
-    // save the user's doc
-    await userQuery.save()
+    await User.updateOne({ email: email }, { $set: { verificationData: verificationData } })
 
     // send the verification email to the user
     await sendVerificationEmail(email, `https://webapp.nbcompany.io/verify?email=${email}&token=${verificationData.verificationToken}`)
