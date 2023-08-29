@@ -105,10 +105,10 @@ router.post('/verify-token', async (req: Request, res: Response) => {
 })
 
 router.post('/create-verification-token', async (req: Request, res: Response) => {
-    const { email, jwtToken } = req.body
+    const { email, password, jwtToken } = req.body
 
     try {
-        const { status, message, data } = await createVerificationToken(email, jwtToken)
+        const { status, message, data } = await createVerificationToken(email, password ?? null, jwtToken ?? null)
         res.json(status === Status.ERROR ? {
             status,
             error: 'Creating verification token failed.',
