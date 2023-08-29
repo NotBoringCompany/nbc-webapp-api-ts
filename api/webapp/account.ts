@@ -99,7 +99,7 @@ export const registerAccount = async (email: string, password: string): Promise<
 /**
  * `createVerificationToken` manually creates a verification token for non-verified emails
  * 
- * requires a JWT token OR their password to ensure that only authorized users can create a verification token for a user's email.
+ * requires a JWT token, password OR the user's unique hash to ensure that only authorized users can create a verification token for a user's email.
  * 
  * this should only be called for emails that have been registered before Aug 25 2023 (when we updated the account registration to include verification tokens)
  * 
@@ -109,9 +109,9 @@ export const registerAccount = async (email: string, password: string): Promise<
  * @param email the user's email
  * @returns a ReturnValue instance
  */
-export const createVerificationToken = async (email: string, password?: string, jwtToken?: string): Promise<ReturnValue> => {
+export const createVerificationToken = async (email: string, password?: string, jwtToken?: string, uniqueHash?: string): Promise<ReturnValue> => {
   try {
-    if (!password && !jwtToken) {
+    if (!password && !jwtToken && !uniqueHash) {
       return {
         status: Status.ERROR,
         message: 'Unauthorized to send verification email. Requires at least a password or jwtToken',
@@ -171,10 +171,29 @@ export const createVerificationToken = async (email: string, password?: string, 
           message: 'Unauthorized to send verification email. False JWT token.',
           data: null
         }
-      } 
+      }
+    } else if (uniqueHash) {
+      // get the uniqueHash
+      const uniqueHashToCheck = userQuery.uniqueHash
+      if (!uniqueHashToCheck) {
+        return {
+          status: Status.ERROR,
+          message: 'An error has occurred when trying to fetch the user\'s unique hash. Please try again later.',
+          data: null,
+        }
+      }
+
+      // check if the given unique hash matches the `uniqueHashToCheck`
+      if (uniqueHash !== uniqueHashToCheck) {
+        return {
+          status: Status.ERROR,
+          message: 'Unauthorized to send verification email. False unique hash.',
+          data: null
+        }
+      }
     }
 
-    // if either password/jwt token is valid, we create the verification data and save it to the database
+    // if either password/jwt token/unique hash is valid, we create the verification data and save it to the database
     const verificationData = {
       // the verification token
       verificationToken: crypto.randomBytes(150).toString('hex'),
