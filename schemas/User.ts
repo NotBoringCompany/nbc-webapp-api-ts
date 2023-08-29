@@ -27,6 +27,9 @@ export const UserSchema = new mongoose.Schema(
         hasVerified: Boolean,
         // checks the amount of invalid attempts the user has made to login within 24 hours and optionally a temporary ban if exceeded.
         loginData: Object,
+        // includes: prevEmail, newEmailUnverified (email user changed to but hasnt been verified yet), newEmailVerified (once user verifies the new email), changeVerificationData and changeDate.
+        // note that `changeVerificationData` is the same as `verificationData`, but is stored inside `emailChangeData` to differentiate between the two. the former is used any time the user changes email
+        emailChangeData: Object,
     }, {
         versionKey: false,
     }

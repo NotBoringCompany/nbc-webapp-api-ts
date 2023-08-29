@@ -71,7 +71,7 @@ export const registerAccount = async (email: string, password: string): Promise<
     await newUser.save()
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}&changedEmail=false`)
 
     return {
       status: Status.SUCCESS,
@@ -97,11 +97,103 @@ export const registerAccount = async (email: string, password: string): Promise<
 }
 
 /**
+ * `changeEmail` changes the user's previous email to a new one
+ * @param email the user's current email
+ * @param password the user's password
+ * @param newEmail the user's new email to be changed to
+ * @returns a ReturnValue instance
+ */
+export const changeEmail = async (email: string, password: string, newEmail: string): Promise<ReturnValue> => {
+  try {
+    if (!newEmail) {
+      return {
+        status: Status.ERROR,
+        message: 'New email is required',
+        data: null
+      }
+    }
+
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    if (!userQuery.hasVerified) {
+      return {
+        status: Status.ERROR,
+        message: 'You are required to verify your current email first before changing.',
+        data: null
+      }
+    }
+
+    // apparently, when hashes start with '$2y', they need to be replaced to '$2a'.
+    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
+    if (!passwordMatch) {
+      return {
+        status: Status.ERROR,
+        message: 'Unauthorized to change email. False password.',
+        data: null
+      }
+    }
+
+    // if the user has an existing `emailChangeData` object
+    if (userQuery.emailChangeData) {
+      const changeDate = userQuery.emailChangeData.changeDate
+      const now = Date.now()
+      const diff = now - changeDate
+      // if the user has just recently changed their email (within 7 days), we return an error.
+      if (userQuery.emailChangeData.changeDate && userQuery.emailChangeData.changeDate > Date.now() - 7 * 24 * 60 * 60 * 1000) {
+        return {
+          status: Status.ERROR,
+          message: `You have recently changed your email ${Math.floor(diff / 1000 / 60 / 60 / 24)} day(s) ago. You can only change your email once every 7 days.`,
+          data: null
+        }
+      }
+    }
+
+    // if the user has changed their email more than 7 days ago OR they don't have an existing `emailChangeData` (meaning they never changed emails before), we continue.
+    // we will first set `emailChangeData.prevEmail` to be `email`
+    // `emailChangeData.newEmailUnverified` will be `newEmail`
+    // `emailChangeData.newEmailVerified` will be null
+    // then, we call `createVerificationTokenEmailChange` to create a verification token for the new email.
+    await User.updateOne({ email: email }, { $set: { 'emailChangeData.prevEmail': email, 'emailChangeData.newEmailUnverified': newEmail, 'emailChangeData.newEmailVerified': null } })
+
+    // call `createVerificationTokenEmailChange` to create a verification token for the new email.
+    await createVerificationTokenEmailChange(email, newEmail)
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Email change request successful. An email has been sent to the user.',
+      data: null
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `createVerificationToken` manually creates a verification token for non-verified emails
  * 
  * requires a JWT token, password OR the user's unique hash to ensure that only authorized users can create a verification token for a user's email.
  * 
  * this should only be called for emails that have been registered before Aug 25 2023 (when we updated the account registration to include verification tokens)
+ * 
  * 
  * all emails prior to aug 25 will not have a verification token and is required to have one, hence this function.
  * 
@@ -228,6 +320,63 @@ export const createVerificationToken = async (email: string, password?: string, 
 }
 
 /**
+ * `createVerificationTokenEmailChange` creates a verification token for a user who has requested to change their email.
+ * @param prevEmail the user's `current email`, technically
+ * @param email the user's new email to be verified
+ * 
+ * this is a 'private' function that will be called by `changeEmail` 
+ * @returns a ReturnValue instance
+ */
+const createVerificationTokenEmailChange = async (prevEmail: string, email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: prevEmail })
+
+    // this shouldnt return an error since the parent function should check for this already
+    // but just as a precaution
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    // password checks have been done in the parent function. now, we just create the verification token and send the email.
+    const verificationData = {
+      // the verification token
+      verificationToken: crypto.randomBytes(150).toString('hex'),
+      // 24 hour validity
+      expiryDate: new Date(Date.now() + 24 * 60 * 60 * 1000)
+    }
+
+    // add the verification token to the user's doc
+    await User.updateOne({ email: prevEmail }, { $set: { 'emailChangeData.changeVerificationData': verificationData } })
+
+    // send the verification email to the user
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}&changedEmail=true&prevEmail=${prevEmail}`)
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Verification token created successfully. An email has been sent to the user.',
+      data: null,
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `verifyJwtToken` verifies whether the JWT token specified is valid.
  * @param token the JWT token to verify
  * @returns a string if the token is valid, null if the token is invalid
@@ -331,11 +480,76 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
 
     // if all checks pass, set the user's account to verified
     userQuery.hasVerified = true
-    await userQuery.save()
 
     return {
       status: Status.SUCCESS,
       message: 'User verified successfully',
+      data: null
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
+ * `verifyTokenEmailChange` verifies whether the token sent to the user to verify their newly changed email is valid.
+ * @param prevEmail the user's previous email (to be replaced with `newEmail` at the end if all checks pass)
+ * @param newEmail the user's new email
+ * @param token the verification token to be checked
+ * @returns a ReturnValue instance
+ */
+export const verifyTokenEmailChange = async (prevEmail: string, newEmail: string, token: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: prevEmail })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User does not exist',
+        data: null
+      }
+    }
+
+    // if the token in the DB doesn't match the token sent, return an error
+    if (userQuery.emailChangeData.changeVerificationData.verificationToken !== token) {
+      return {
+        status: Status.ERROR,
+        message: 'Invalid token',
+        data: null
+      }
+    }
+
+    // if the token has expired, return an error
+    if (userQuery.emailChangeData.changeVerificationData.expiryDate < Date.now()) {
+      return {
+        status: Status.ERROR,
+        message: 'Token has expired',
+        data: null
+      }
+    }
+
+    // if all checks pass, we set the user's `emailChangeData.newEmailVerified` to be `newEmail`
+    // `emailChangeData.newEmailUnverified` will be null.
+    // `emailChangeData.changeVerificationData` will be null.
+    // `emailChangeData.changeDate` will be the current date.
+    await User.updateOne({ email: prevEmail }, { $set: { 'emailChangeData.newEmailVerified': newEmail, 'emailChangeData.newEmailUnverified': null, 'emailChangeData.changeVerificationData': null, 'emailChangeData.changeDate': Date.now() } })
+    // we also set the user's `email` to be `newEmail` if all checks pass.
+    await User.updateOne({ email: prevEmail }, { $set: { email: newEmail } })
+
+    return {
+      status: Status.SUCCESS,
+      message: 'New email has been verified successfully',
       data: null
     }
   } catch (err: any) {

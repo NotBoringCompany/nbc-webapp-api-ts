@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { checkIfVerificationTokenExists, checkIfVerified, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken } from '../../api/webapp/account'
+import { changeEmail, checkIfVerificationTokenExists, checkIfVerified, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -72,6 +72,58 @@ router.post('/register-account', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Registering account failed',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.post('/change-email', async (req: Request, res: Response) => {
+    const { email, password, newEmail } = req.body
+
+    try {
+        const { status, message, data } = await changeEmail(email, password, newEmail)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Changing email failed.',
+            message: message,
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Changing email failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.post('/verify-token-email-change', async (req: Request, res: Response) => {
+    const { prevEmail, newEmail, token } = req.body
+
+    try {
+        const { status, message, data } = await verifyTokenEmailChange(prevEmail, newEmail, token)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Verifying token failed.',
+            message: message,
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Verifying token failed.',
             message: err,
             data: null
         })
