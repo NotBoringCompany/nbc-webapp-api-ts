@@ -27,7 +27,7 @@ export const removeExpiredTokens = async (): Promise<void> => {
                 const user = userQuery[i]
                 // if the user has an ethaddress and an email, then we remove the email associated AND remove the verificationData.
                 if (user.ethAddress && user.email) {
-                    await user.updateOne({ email: null, verificationData: null })
+                    await user.updateOne({ email: undefined, verificationData: undefined })
                     updatedUsersCount++
                 } else if (!user.ethAddress && user.email) {
                     // if the user only has an email, then we delete their account.
