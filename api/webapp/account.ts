@@ -114,7 +114,7 @@ export const createVerificationToken = async (email: string, password?: string, 
     if (!password && !jwtToken && !uniqueHash) {
       return {
         status: Status.ERROR,
-        message: 'Unauthorized to send verification email. Requires at least a password or jwtToken',
+        message: 'Unauthorized to send verification email. Requires at least a password or jwtToken or uniqueHash',
         data: null
       }
     }
