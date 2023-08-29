@@ -97,7 +97,7 @@ export const registerAccount = async (email: string, password: string): Promise<
 }
 
 /**
- * `changeEmail` changes the user's previous email to a new one
+ * `changeEmail` changes the user's previous email to a new one (will be unverified until user verifies)
  * @param email the user's current email
  * @param password the user's password
  * @param newEmail the user's new email to be changed to
