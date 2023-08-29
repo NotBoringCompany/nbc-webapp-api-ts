@@ -563,7 +563,7 @@ export const checkIfVerificationTokenExists = async (email: string): Promise<Ret
       }
     }
 
-    if (userQuery.verificationData.verificationToken) {
+    if (userQuery.verificationData?.verificationToken) {
       return {
         status: Status.SUCCESS,
         message: 'User has a verification token',
@@ -573,7 +573,7 @@ export const checkIfVerificationTokenExists = async (email: string): Promise<Ret
       }
     }
 
-    if (!userQuery.verificationData.verificationToken) {
+    if (!userQuery.verificationData?.verificationToken) {
       return {
         status: Status.SUCCESS,
         message: 'User does not have a verification token',
