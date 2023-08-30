@@ -572,6 +572,10 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
  */
 export const verifyTokenEmailChange = async (prevEmail: string, newEmail: string, token: string): Promise<ReturnValue> => {
   try {
+    console.log('prevEmail: ', prevEmail)
+    console.log('newEmail: ', newEmail)
+    console.log('token: ', token)
+    
     const User = mongoose.model('_User', UserSchema, '_User')
     const userQuery = await User.findOne({ email: prevEmail })
 
