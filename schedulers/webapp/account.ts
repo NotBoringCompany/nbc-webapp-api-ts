@@ -10,7 +10,7 @@ import { UserSchema } from '../../schemas/User'
  */
 export const removeExpiredTokens = async (): Promise<void> => {
     try {
-        cron.schedule('*/10 * * * * *', async () => {
+        cron.schedule('*/10 * * * *', async () => {
             let updatedUsersCount = 0
             let deletedUsersCount = 0
 
