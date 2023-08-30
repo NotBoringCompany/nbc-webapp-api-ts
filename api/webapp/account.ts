@@ -575,7 +575,7 @@ export const verifyTokenEmailChange = async (prevEmail: string, newEmail: string
     console.log('prevEmail: ', prevEmail)
     console.log('newEmail: ', newEmail)
     console.log('token: ', token)
-    
+
     const User = mongoose.model('_User', UserSchema, '_User')
     const userQuery = await User.findOne({ email: prevEmail })
 
@@ -605,7 +605,7 @@ export const verifyTokenEmailChange = async (prevEmail: string, newEmail: string
       }
     }
 
-    // if all checks pass, we set the user's `emailChangeData.newEmailVerified` to be `newEmail`
+    // if all checks pass, we set the user's `emailChangeData.newEmailVerified` to be `newEmail`.
     // `emailChangeData.newEmailUnverified` will be null.
     // `emailChangeData.changeVerificationData` will be null.
     // `emailChangeData.changeDate` will be the current date.
