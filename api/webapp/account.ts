@@ -481,6 +481,8 @@ export const verifyToken = async (email: string, token: string): Promise<ReturnV
     // if all checks pass, set the user's account to verified
     userQuery.hasVerified = true
 
+    await userQuery.save()
+
     return {
       status: Status.SUCCESS,
       message: 'User verified successfully',
