@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { changeEmail, checkIfVerificationTokenExists, checkIfVerified, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
+import { changeEmail, checkIfVerificationTokenExists, checkIfVerified, checkNewEmailUnverified, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, registerAccount, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -98,6 +98,32 @@ router.post('/change-email', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Changing email failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/check-new-email-unverified/:email', async (req: Request, res: Response) => {
+    const { email } = req.params
+
+    try {
+        const { status, message, data } = await checkNewEmailUnverified(email)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Checking if new email is unverified failed.',
+            message: message,
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Checking if new email is unverified failed.',
             message: err,
             data: null
         })

@@ -188,6 +188,65 @@ export const changeEmail = async (email: string, password: string, newEmail: str
 }
 
 /**
+ * `checkNewEmailUnverified` checks whether a user's email to be changed to is still unverified.
+ * This is done if the user has requested to change their email but has not verified their new email yet.
+ * this check makes sense because once a new email is verified, that becomes their current `email` and the `newEmailUnverified` becomes null.
+ * @param email the user's current email
+ */
+export const checkNewEmailUnverified = async (email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    if (!userQuery.emailChangeData) {
+      return {
+        status: Status.ERROR,
+        message: 'User has not requested to change their email',
+        data: null
+      }
+    }
+
+    if (!userQuery.emailChangeData.newEmailUnverified) {
+      return {
+        status: Status.SUCCESS,
+        message: 'User has already verified their new email',
+        data: {
+          verified: true,
+        }
+      }
+    } else {
+      return {
+        status: Status.SUCCESS,
+        message: 'User has not verified their new email yet',
+        data: {
+          verified: false,
+        }
+      }
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `createVerificationToken` manually creates a verification token for non-verified emails
  * 
  * requires a JWT token, password OR the user's unique hash to ensure that only authorized users can create a verification token for a user's email.
