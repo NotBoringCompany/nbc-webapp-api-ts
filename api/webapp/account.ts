@@ -188,6 +188,61 @@ export const changeEmail = async (email: string, password: string, newEmail: str
 }
 
 /**
+ * `changePassword` changes the user's password.
+ * Future implementations will include being able to change password if users forget their password.
+ * @param email the user's email
+ * @param password the user's password
+ */
+export const changePassword = async (email: string, password: string, newPassword: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    // apparently, when hashes start with '$2y', they need to be replaced to '$2a'.
+    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
+    if (!passwordMatch) {
+      return {
+        status: Status.ERROR,
+        message: 'Unauthorized to change password. False password.',
+        data: null
+      }
+    }
+
+    // hash the new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10)
+
+    // set the user's hashed password to be the new hashed password
+    await userQuery.updateOne({ $set: { _hashed_password: hashedPassword } })
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Password changed successfully',
+      data: null
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `checkNewEmailUnverified` checks whether a user's email to be changed to is still unverified.
  * This is done if the user has requested to change their email but has not verified their new email yet.
  * this check makes sense because once a new email is verified, that becomes their current `email` and the `newEmailUnverified` becomes null.
