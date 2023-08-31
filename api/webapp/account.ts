@@ -132,6 +132,14 @@ export const changeEmail = async (email: string, password: string, newEmail: str
       }
     }
 
+    if (userQuery.emailChangeData?.newEmailUnverified) {
+      return {
+        status: Status.ERROR,
+        message: 'You have already requested to change your email. Please verify your new email first before changing.',
+        data: null
+      }
+    }
+
     // apparently, when hashes start with '$2y', they need to be replaced to '$2a'.
     const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
     if (!passwordMatch) {
