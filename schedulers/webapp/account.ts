@@ -47,4 +47,37 @@ export const removeExpiredTokens = async (): Promise<void> => {
     }
 }
 
-removeExpiredTokens()
+/**
+ * Resets the login ban for all eligible users.
+ * A login ban can happen when users fail to login too many times. 
+ * Note that this scheduler will only remove temporary bans. Permanent bans must be resolved via support.
+ */
+export const resetLoginBan = async (): Promise<void> => {
+    try {
+        // runs every 10 minutes
+        cron.schedule('*/10 * * * *', async () => {
+            const User = mongoose.model('_User', UserSchema, '_User')
+            // we find users where `loginData.tempBan` is true and `loginData.unbanDate` is less than or equal to the current time
+            const userQuery = await User.find({ 'loginData.tempBan': true, 'loginData.unbanDate': { $lte: new Date() } })
+
+            if (!userQuery || userQuery.length === 0) {
+                return
+            }
+
+            // because all users that have a permanent ban have unbanDates that are set to `null`, we can safely assume that all users in `userQuery` have temporary bans.
+            // therefore, we can just set `loginData.tempBan` to false and `loginData.unbanDate` to null.
+            for (let i = 0; i < userQuery.length; i++) {
+                const user = userQuery[i]
+                await user.updateOne({ 'loginData.tempBan': false, 'loginData.unbanDate': null })
+            }
+
+            console.log(`successfully reset login ban for ${userQuery.length} users.`)
+        })
+    } catch (err: any) {
+        console.log({
+            status: Status.ERROR,
+            error: 'Resetting login ban failed.',
+            message: err,
+        })
+    }
+}

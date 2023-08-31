@@ -17,7 +17,7 @@ const mongoURI: string = process.env.MONGODB_URI ?? ''
 import backendAccount from './routes/game-backend/account'
 import kosOwnership from './routes/nfts/kos/ownership'
 import webappAccount from './routes/webapp/account'
-import { removeExpiredTokens } from './schedulers/webapp/account'
+import { removeExpiredTokens, resetLoginBan } from './schedulers/webapp/account'
 
 /** MORALIS VARIABLES */
 const serverUrl: string = process.env.MORALIS_SERVERURL ?? ''
@@ -63,4 +63,5 @@ app.listen(port, async () => {
 
     // SCHEDULERS
     await removeExpiredTokens()
+    await resetLoginBan()
 })
