@@ -14,6 +14,7 @@ export const InviteCodesSchema = new mongoose.Schema(
         redeemedAt: Date,
         multiUse: Boolean,
         // multiUseRedeemData is only used if the invite code is multi-use
+        // it is an array of objects with `email` and `redeemedAt` fields
         multiUseRedeemData: Array,
         maxUses: Number,
         timesUsed: Number,
