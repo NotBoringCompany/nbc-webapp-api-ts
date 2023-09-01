@@ -15,8 +15,8 @@ export const removeExpiredTokens = async (): Promise<void> => {
             let deletedUsersCount = 0
 
             const User = mongoose.model('_User', UserSchema, '_User')
-            // find users where `verificationData` exists and `verificationData.expiyDate` is less than or equal to the current time
-            const userQuery = await User.find({ 'verificationData.expiryDate': { $lte: new Date() } })
+            // find users where `verificationData` exists, `hasVerified` is false and `verificationData.expiryDate` is less than or equal to the current time
+            const userQuery = await User.find({ verificationData: { $exists: true }, hasVerified: false, 'verificationData.expiryDate': { $lte: new Date( ) } })
 
             if (!userQuery || userQuery.length === 0) {
                 return
