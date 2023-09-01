@@ -5,10 +5,10 @@ import { generateInviteCodes } from '../../api/webapp/inviteCodes'
 const router = express.Router()
 
 router.post('/generate-invite-codes', async (req: Request, res: Response) => {
-    const { amount, purpose, multiUse, maxUses, adminPassword } = req.body
+    const { amount, purpose, multiUse, maxUses, expiryDate, adminPassword } = req.body
     
     try {
-        const { status, message, data } = await generateInviteCodes(amount, purpose, multiUse, maxUses, adminPassword)
+        const { status, message, data } = await generateInviteCodes(adminPassword, amount, purpose, multiUse, maxUses, expiryDate)
         res.json(status === Status.ERROR ? {
             status: status,
             error: message,

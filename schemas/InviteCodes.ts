@@ -14,6 +14,7 @@ export const InviteCodesSchema = new mongoose.Schema(
         multiUse: Boolean,
         maxUses: Number,
         timesUsed: Number,
+        expiryDate: Date,
     }, {
         versionKey: false,
     }
