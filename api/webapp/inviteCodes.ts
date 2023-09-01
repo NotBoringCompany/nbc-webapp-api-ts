@@ -3,7 +3,7 @@ import { ReturnValue, Status } from '../../utils/retVal'
 import { InviteCodesSchema } from '../../schemas/InviteCodes'
 import crypto from 'crypto'
 import { generateObjectId } from '../../utils/cryptoUtils'
-import referralCodes from 'referral-codes'
+import * as referralCodes from 'referral-codes'
 
 /**
  * `redeemInviteCode` redeems an invite code.
