@@ -2,6 +2,7 @@ import mongoose from 'mongoose'
 import { ReturnValue, Status } from '../../utils/retVal'
 import { InviteCodesSchema } from '../../schemas/InviteCodes'
 import crypto from 'crypto'
+import { generateObjectId } from '../../utils/cryptoUtils'
 
 /**
  * `generateInviteCodes` generates invite codes for a specific `purpose` (such as for Alpha V1 (the game), or for other purposes).
@@ -31,6 +32,7 @@ export const generateInviteCodes = async (
 
         const inviteCodes = inviteCodesArr.map(() => {
             return {
+                _id: generateObjectId(),
                 inviteCode: crypto.randomBytes(16).toString('hex'),
                 purpose,
                 redeemed: false,
