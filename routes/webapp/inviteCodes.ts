@@ -29,3 +29,5 @@ router.post('/generate-invite-codes', async (req: Request, res: Response) => {
         })
     }
 })
+
+export default router

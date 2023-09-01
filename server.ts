@@ -17,6 +17,7 @@ const mongoURI: string = process.env.MONGODB_URI ?? ''
 import backendAccount from './routes/game-backend/account'
 import kosOwnership from './routes/nfts/kos/ownership'
 import webappAccount from './routes/webapp/account'
+import inviteCodes from './routes/webapp/inviteCodes'
 import { removeExpiredTokens, resetLoginBan } from './schedulers/webapp/account'
 
 /** MORALIS VARIABLES */
@@ -49,6 +50,7 @@ app.use(session({
 app.use('/backend-account', backendAccount)
 app.use('/kos/ownership', kosOwnership)
 app.use('/webapp', webappAccount)
+app.use('/invite-codes', inviteCodes)
 
 app.listen(port, async () => {
     console.log(`Server is running on port ${port}`)
