@@ -80,13 +80,15 @@ export const generateInviteCodes = async (
         const inviteCodesArr = Array.from({ length: amount })
 
         const inviteCodes = inviteCodesArr.map(() => {
+            const code = referralCodes.generate({
+                length: 20,
+                count: 1,
+                prefix: purpose.replace(/\s/g, '').toUpperCase(),
+            })
             return {
                 _id: generateObjectId(),
-                inviteCode: referralCodes.generate({
-                    length: 20,
-                    count: 1,
-                    prefix: purpose.replace(/\s/g, '').toUpperCase(),
-                }),
+                // `code` returns an array of strings. we take the 0th index since we only do 1 code at a time.
+                inviteCode: code[0],
                 purpose,
                 redeemed: false,
                 redeemedBy: null,
