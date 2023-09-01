@@ -94,7 +94,7 @@ export const generateInviteCodes = async (
                 multiUse: multiUse,
                 maxUses: maxUses,
                 // if expiry date is not provided, we set it to 7 days from now (default)
-                expiryDate: new Date(expiryDate * 1000) ?? new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                expiryDate: expiryDate ? new Date(expiryDate * 1000) : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
                 timesUsed: 0
             }
         })
