@@ -21,6 +21,7 @@
     "moralis-v1": "^1.12.0",
     "node-cron": "^3.0.2",
     "nodemailer": "^6.9.1",
+    "referral-codes": "^2.0.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

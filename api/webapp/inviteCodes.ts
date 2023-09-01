@@ -3,6 +3,7 @@ import { ReturnValue, Status } from '../../utils/retVal'
 import { InviteCodesSchema } from '../../schemas/InviteCodes'
 import crypto from 'crypto'
 import { generateObjectId } from '../../utils/cryptoUtils'
+import referralCodes from 'referral-codes'
 
 /**
  * `redeemInviteCode` redeems an invite code.
@@ -81,7 +82,11 @@ export const generateInviteCodes = async (
         const inviteCodes = inviteCodesArr.map(() => {
             return {
                 _id: generateObjectId(),
-                inviteCode: crypto.randomBytes(16).toString('hex'),
+                inviteCode: referralCodes.generate({
+                    length: 20,
+                    count: 1,
+                    prefix: purpose.replace(/\s/g, '').toUpperCase(),
+                }),
                 purpose,
                 redeemed: false,
                 redeemedBy: null,
