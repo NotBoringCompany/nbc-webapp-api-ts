@@ -48,7 +48,7 @@ router.get('/check-auth', (req: Request, res: Response) => {
             error: 'Internal Server Error',
             message: 'An internal server error occurred.',
             data: null
-        });
+        })
     }
 });
 
