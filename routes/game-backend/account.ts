@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { fetchWalletFromSessionToken, moralisLogin, resetPassword, resetPasswordTokenCheck, sendResetPasswordRequest, verifyAlphaAccess } from '../../api/game-backend/account'
+import { fetchWalletFromSessionToken, moralisLogin, ownsAlphaInviteCode, resetPassword, resetPasswordTokenCheck, sendResetPasswordRequest, verifyAlphaAccess } from '../../api/game-backend/account'
 import { Status } from '../../utils/retVal'
 
 const router = express.Router()
@@ -9,6 +9,31 @@ router.get('/verify-alpha-access/:email' , async (req: Request, res: Response) =
 
     try {
         const { status, message, data } = await verifyAlphaAccess(email)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'User does not have alpha access.',
+            data: null
+        } : {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'User does not have alpha access.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/ownsAlphaInviteCode/:email', async (req: Request, res: Response) => {
+    const { email } = req.params
+
+    try {
+        const { status, message, data } = await ownsAlphaInviteCode(email)
         res.json(status === Status.ERROR ? {
             status,
             error: 'User does not have alpha access.',

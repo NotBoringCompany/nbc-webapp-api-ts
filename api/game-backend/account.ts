@@ -103,6 +103,52 @@ export const verifyAlphaAccess = async (email: string): Promise<ReturnValue> => 
     }
 }
 
+/**
+ * `ownsAlphaInviteCode` checks whether a user owns an invite code for Alpha V1.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const ownsAlphaInviteCode = async (email: string): Promise<ReturnValue> => {
+    try {
+        if (!email) {
+            return {
+                status: Status.ERROR,
+                message: 'Email is required.',
+                data: null
+            }
+        }
+
+        const InviteCodes = mongoose.model('InviteCodes', InviteCodesSchema, 'InviteCodes')
+        const inviteCodeQuery = await InviteCodes.findOne({ redeemedBy: email, purpose: 'Alpha V1' })
+
+        if (!inviteCodeQuery) {
+            return {
+                status: Status.ERROR,
+                message: 'User does not have a valid invite code for Alpha V1.',
+                data: null
+            }
+        }
+
+        return {
+            status: Status.SUCCESS,
+            message: 'User has a valid invite code for Alpha V1.',
+            data: null
+        }
+    } catch (err: any) {
+        console.log({
+            status: Status.ERROR,
+            message: err,
+            data: null
+        })
+
+        return {
+            status: Status.ERROR,
+            message: err,
+            data: null
+        }
+    }
+}
+
 
 /**
  * `moralisLogin` logs the user in via Moralis.
