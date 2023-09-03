@@ -5,8 +5,105 @@ import mongoose from 'mongoose'
 import * as dotenv from 'dotenv'
 import path from 'path'
 import { SessionQuerySchema, UserQuerySchema } from '../../schemas/Session'
+import { UserSchema } from '../../schemas/User'
+import { InviteCodesSchema } from '../../schemas/InviteCodes'
+import { verifyOwnership } from '../nfts/kos/ownership'
 
-dotenv.config({ path: path.join(__dirname, '../../.env') })
+/**
+ * `verifyAlphaAccess` checks whether a user is able to play the Alpha V1 of our mainline game.
+ * It requires that the user has either: a valid invite code, or a Key Of Salvation.
+ * This requirement may change in the future.
+ * @param email the user's email
+ * @returns a ReturnValue instance
+ */
+export const verifyAlphaAccess = async (email: string): Promise<ReturnValue> => {
+    try {
+        if (!email) {
+            return {
+                status: Status.ERROR,
+                message: 'Email is required.',
+                data: null
+            }
+        }
+        
+        // we query for the user's wallet first
+        const User = mongoose.model('User', UserSchema, '_User')
+        const userQuery = await User.findOne({ email: email })
+
+        if (!userQuery) {
+            return {
+                status: Status.ERROR,
+                message: 'User not found.',
+                data: null
+            }
+        }
+
+        // we now fetch the user's wallet address
+        const walletAddress = userQuery.ethAddress
+
+        // if the user doesn't have a wallet address, we check if they have a valid invite code.
+        if (!walletAddress) {
+            const InviteCodes = mongoose.model('InviteCodes', InviteCodesSchema, 'InviteCodes')
+            const inviteCodeQuery = await InviteCodes.findOne({ redeemedBy: email, purpose: 'Alpha V1' })
+
+            if (!inviteCodeQuery) {
+                return {
+                    status: Status.ERROR,
+                    message: 'User does not have a valid invite code for Alpha V1.',
+                    data: null
+                }
+            } else {
+                return {
+                    status: Status.SUCCESS,
+                    message: 'User has a valid invite code for Alpha V1.',
+                    data: null
+                }
+            }
+        } else {
+            // if user has a wallet address, we check if they have a Key Of Salvation.
+            const ownership = await verifyOwnership(walletAddress)
+            if (ownership) {
+                return {
+                    status: Status.SUCCESS,
+                    message: 'User has a Key Of Salvation.',
+                    data: null
+                }
+            // otherwise, we check if they have a valid invite code.
+            } else {
+                const InviteCodes = mongoose.model('InviteCodes', InviteCodesSchema, 'InviteCodes')
+                const inviteCodeQuery = await InviteCodes.findOne({ redeemedBy: email, purpose: 'Alpha V1' })
+
+                if (!inviteCodeQuery) {
+                    return {
+                        status: Status.ERROR,
+                        message: 'User does not have a valid invite code for Alpha V1.',
+                        data: null
+                    }
+                } else {
+                    return {
+                        status: Status.SUCCESS,
+                        message: 'User has a valid invite code for Alpha V1.',
+                        data: null
+                    }
+                }
+            }
+        }
+    } catch (err: any) {
+        console.log({
+            status: Status.ERROR,
+            message: err,
+            data: null
+        })
+
+        return {
+            status: Status.ERROR,
+            message: err,
+            data: null
+        }
+    }
+}
+
+
 /**
  * `moralisLogin` logs the user in via Moralis.
  * @param email the user's email

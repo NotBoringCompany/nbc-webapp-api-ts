@@ -67,8 +67,10 @@ export const redeemInviteCode = async (inviteCode: string, email: string, unique
                 }
             }
         }
+        
 
         // we now check for the purpose of the invite code.
+        const purpose = inviteCodeQuery.purpose
 
         // if invite code is not redeemed, we check if the user has already redeemed an invite code for this purpose.
         // if yes, we return an error.
@@ -80,7 +82,7 @@ export const redeemInviteCode = async (inviteCode: string, email: string, unique
         if (inviteCodeQuery.multiUse) {
            const userInviteCodeQuery = await InviteCodes.findOne({ 'multiUseRedeemData.email': email, purpose: inviteCodeQuery.purpose })
         } else {
-            userInviteCodeQuery = await InviteCodes.findOne({ redeemedBy: email, purpose: inviteCodeQuery.purpose })
+            userInviteCodeQuery = await InviteCodes.findOne({ redeemedBy: email, purpose: purpose })
         }
 
         if (userInviteCodeQuery) {
@@ -101,6 +103,15 @@ export const redeemInviteCode = async (inviteCode: string, email: string, unique
             return {
                 status: Status.ERROR,
                 message: 'User not found.',
+                data: null
+            }
+        }
+
+        // we need to check if they're verified. if they're not, we return an error as we require them to be verified to redeem an invite code.
+        if (!userQuery.hasVerified) {
+            return {
+                status: Status.ERROR,
+                message: 'You must verify your email to redeem an invite code.',
                 data: null
             }
         }
