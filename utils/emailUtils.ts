@@ -34,8 +34,7 @@ export const verificationMsg = (email: string, verificationLink: string): Mailgu
  * @param verificationLink the link that will be sent to the user's email for verification
  * This template is used to send verification emails to users for creating their accounts via our webapp.
  */
-export const verificationTemplate = (verificationLink: string): string => `
-<!DOCTYPE html>
+export const verificationTemplate = (verificationLink: string): string => `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -43,25 +42,14 @@ export const verificationTemplate = (verificationLink: string): string => `
     <style>
         /* General styling for the email */
         body {
-            font-family: 'Arial', sans-serif; /* Fallback font */
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
             background-color: #f5f5f5;
         }
 
         h1, h2, h3, p, a {
             font-family: 'Chakra Petch', Arial, sans-serif;
-        }
-
-        .success-color {
-            color: #42ca9f;
-        }
-        .error-color {
-            color: #ca4242;
         }
 
         /* Button styling (note: email clients may not fully support hover effects) */
@@ -85,10 +73,10 @@ export const verificationTemplate = (verificationLink: string): string => `
 
         .container {
             text-align: center;
-            background-color: white; /* White box background */
-            padding: 20px; /* Add padding to the white box */
-            border-radius: 10px; /* Rounded corners for the white box */
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
 
         .email-background {
@@ -115,5 +103,4 @@ export const verificationTemplate = (verificationLink: string): string => `
         </div>
     </div>
 </body>
-</html>
-`
+</html>`
