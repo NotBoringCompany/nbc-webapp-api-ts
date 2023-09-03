@@ -29,7 +29,7 @@ router.get('/verify-alpha-access/:email' , async (req: Request, res: Response) =
     }
 })
 
-router.get('/ownsAlphaInviteCode/:email', async (req: Request, res: Response) => {
+router.get('/owns-alpha-invite-code/:email', async (req: Request, res: Response) => {
     const { email } = req.params
 
     try {
