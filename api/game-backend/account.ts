@@ -125,14 +125,18 @@ export const ownsAlphaInviteCode = async (email: string): Promise<ReturnValue> =
             return {
                 status: Status.ERROR,
                 message: 'User does not have a valid invite code for Alpha V1.',
-                data: null
+                data: {
+                    hasInviteCode: false
+                }
             }
         }
 
         return {
             status: Status.SUCCESS,
             message: 'User has a valid invite code for Alpha V1.',
-            data: null
+            data: {
+                hasInviteCode: true
+            }
         }
     } catch (err: any) {
         console.log({
