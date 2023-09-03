@@ -93,7 +93,7 @@ export const verificationTemplate = (verificationLink: string): string => `<!DOC
         <div class="verification-text">
             <p>You've recently created an account on our web app. To get started, please verify your email address:</p>
             <p>
-                <a href="${verificationLink}" class="verify-button">Verify Email Address</a>
+                <a href="${verificationLink}" class="verify-button" style="color: white">Verify Email Address</a>
             </p>
             <p class="error-color">If this isn't you, please ignore this email or report any suspicious behavior by sending an email back to us.</p>
         </div>
