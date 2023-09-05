@@ -25,7 +25,7 @@ const serverUrl: string = process.env.MORALIS_SERVERURL ?? ''
 const appId: string = process.env.MORALIS_APPID ?? ''
 const masterKey: string = process.env.MORALIS_MASTERKEY ?? ''
 
-export const ALLOWED_ORIGINS = ['http://localhost:3000', 'https://webapp.nbcompany.io', 'nbc-webapp-git-dev-not-boring-company.vercel.app', 'https://nbc-webapp-git-dev-not-boring-company.vercel.app/'] //localhost and dev link only temporary
+export const ALLOWED_ORIGINS = ['http://localhost:3000', 'https://webapp.nbcompany.io', 'nbc-webapp-git-dev-not-boring-company.vercel.app', 'https://nbc-webapp-git-dev-not-boring-company.vercel.app'] //localhost and dev link only temporary
 
 /** EXPRESS MIDDLEWARES */
 app.use(cors({
