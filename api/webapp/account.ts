@@ -149,6 +149,15 @@ export const changeEmail = async (email: string, password: string, newEmail: str
       }
     }
 
+    const newEmailQuery = await User.findOne({ email: newEmail })
+    if (newEmailQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'This email is already used. Please change to another email.',
+        data: null
+      }
+    }
+
     if (userQuery.emailChangeData?.newEmailUnverified) {
       return {
         status: Status.ERROR,
