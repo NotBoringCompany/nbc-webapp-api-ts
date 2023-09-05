@@ -131,10 +131,10 @@ router.post('/change-password', async (req: Request, res: Response) => {
 })
 
 router.post('/link-wallet', async (req: Request, res: Response) => {
-    const { email, uniqueHash, wallet } = req.body
+    const { email, uniqueHash, password, wallet } = req.body
 
     try {
-        const { status, message, data } = await linkWallet(email, wallet, uniqueHash)
+        const { status, message, data } = await linkWallet(email, wallet, password, uniqueHash)
         res.json(status === Status.ERROR ? {
             status,
             error: 'Linking wallet failed.',

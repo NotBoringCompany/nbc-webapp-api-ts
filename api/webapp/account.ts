@@ -297,13 +297,43 @@ export const changePassword = async (email: string, password: string, newPasswor
  * the account MUST not have a wallet address connected to their account yet.
  * @param email the user's email
  * @param wallet the user's wallet
+ * @param password the user's password
  * @param uniqueHash the user's unique hash
  * @returns 
  */
-export const linkWallet = async (email: string, wallet: string, uniqueHash: string): Promise<ReturnValue> => {
+export const linkWallet = async (email: string, wallet: string, password?: string, uniqueHash?: string): Promise<ReturnValue> => {
   try {
     const User = mongoose.model('_User', UserSchema, '_User')
     const userQuery = await User.findOne({ email: email })
+
+    if (!password && !uniqueHash) {
+      return {
+        status: Status.ERROR,
+        message: 'Unauthorized to link wallet. Requires at least a password or uniqueHash',
+        data: null
+      }
+    }
+
+    if (password) {
+      // apparently, when hashes start with '$2y', they need to be replaced to '$2a'.
+      const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
+      if (!passwordMatch) {
+        return {
+          status: Status.ERROR,
+          message: 'Unauthorized to link wallet. False password.',
+          data: null
+        }
+      }
+    }
+
+     // check for the unique hash and if it matches
+     if (uniqueHash && userQuery.uniqueHash !== uniqueHash) {
+      return {
+        status: Status.ERROR,
+        message: 'Unique hash does not match',
+        data: null
+      }
+    }
 
     if (!userQuery) {
       return {
@@ -325,15 +355,6 @@ export const linkWallet = async (email: string, wallet: string, uniqueHash: stri
       return {
         status: Status.ERROR,
         message: 'User already has a wallet connected to their account',
-        data: null
-      }
-    }
-
-    // check for the unique hash and if it matches
-    if (userQuery.uniqueHash !== uniqueHash) {
-      return {
-        status: Status.ERROR,
-        message: 'Unique hash does not match',
         data: null
       }
     }
