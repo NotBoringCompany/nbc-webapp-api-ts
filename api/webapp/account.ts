@@ -292,6 +292,79 @@ export const changePassword = async (email: string, password: string, newPasswor
 }
 
 /**
+ * `linkWallet` links a wallet to a user's account.
+ * 
+ * the account MUST not have a wallet address connected to their account yet.
+ * @param email the user's email
+ * @param wallet the user's wallet
+ * @param uniqueHash the user's unique hash
+ * @returns 
+ */
+const linkWallet = async (email: string, wallet: string, uniqueHash: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email })
+
+    if (!userQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'User not found',
+        data: null
+      }
+    }
+
+    if (userQuery.ethAddress || userQuery.accounts.length > 0) {
+      return {
+        status: Status.ERROR,
+        message: 'User already has a wallet connected to their account',
+        data: null
+      }
+    }
+
+    // check for the unique hash and if it matches
+    if (userQuery.uniqueHash !== uniqueHash) {
+      return {
+        status: Status.ERROR,
+        message: 'Unique hash does not match',
+        data: null
+      }
+    }
+
+    // check if the wallet is already linked to another account
+    const walletQuery = await User.findOne({ ethAddress: wallet })
+    if (walletQuery) {
+      return {
+        status: Status.ERROR,
+        message: 'Wallet is already linked to another account',
+        data: null
+      }
+    }
+
+    // if all checks pass, we add the wallet to the user's account
+    // we update ethAddress and accounts[0]
+    await User.updateOne({ email: email }, { $set: { ethAddress: wallet, accounts: [wallet] } })
+
+    return {
+      status: Status.SUCCESS,
+      message: 'Wallet linked successfully',
+      data: null
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `checkNewEmailUnverified` checks whether a user's email to be changed to is still unverified.
  * This is done if the user has requested to change their email but has not verified their new email yet.
  * this check makes sense because once a new email is verified, that becomes their current `email` and the `newEmailUnverified` becomes null.
