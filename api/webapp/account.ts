@@ -300,7 +300,7 @@ export const changePassword = async (email: string, password: string, newPasswor
  * @param uniqueHash the user's unique hash
  * @returns 
  */
-const linkWallet = async (email: string, wallet: string, uniqueHash: string): Promise<ReturnValue> => {
+export const linkWallet = async (email: string, wallet: string, uniqueHash: string): Promise<ReturnValue> => {
   try {
     const User = mongoose.model('_User', UserSchema, '_User')
     const userQuery = await User.findOne({ email: email })
