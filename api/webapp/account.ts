@@ -59,7 +59,6 @@ export const registerAccount = async (email: string, password: string): Promise<
       };
     }
 
-
     // hash the password
     const hashedPassword = await bcrypt.hash(password, 10)
 
@@ -248,6 +247,22 @@ export const changePassword = async (email: string, password: string, newPasswor
         message: 'Unauthorized to change password. False password.',
         data: null
       }
+    }
+
+    // password requirements
+    if (password.length < 8 || // Minimum length
+        !/[a-z]/.test(password) || // Lowercase letter
+        !/[A-Z]/.test(password) || // Uppercase letter
+        !/[0-9]/.test(password) || // Number
+        !/[!@#$%^&*]/.test(password) // Special symbol
+        // password.includes('commonword') || // Avoid common words
+        // password.includes(email.split('@')[0])) // Avoid part of email
+      ) {
+      return {
+        status: Status.ERROR,
+        message: 'Password does not meet requirements.',
+        data: null
+      };
     }
 
     // hash the new password
