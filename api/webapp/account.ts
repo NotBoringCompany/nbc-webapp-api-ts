@@ -313,6 +313,14 @@ export const linkWallet = async (email: string, wallet: string, uniqueHash: stri
       }
     }
 
+    if (!userQuery.hasVerified) {
+      return {
+        status: Status.ERROR,
+        message: 'User has not verified their email yet',
+        data: null
+      }
+    }
+
     if (userQuery.ethAddress || userQuery.accounts.length > 0) {
       return {
         status: Status.ERROR,
