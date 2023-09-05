@@ -25,7 +25,7 @@ const serverUrl: string = process.env.MORALIS_SERVERURL ?? ''
 const appId: string = process.env.MORALIS_APPID ?? ''
 const masterKey: string = process.env.MORALIS_MASTERKEY ?? ''
 
-export const ALLOWED_ORIGINS = ['http://localhost:3000', 'https://webapp.nbcompany.io'] //localhost only temporary
+export const ALLOWED_ORIGINS = ['http://localhost:3000', 'https://webapp.nbcompany.io', 'https://nbc-webapp-4a2h1x5wr-not-boring-company.vercel.app'] //localhost and dev link only temporary
 
 /** EXPRESS MIDDLEWARES */
 app.use(cors({
