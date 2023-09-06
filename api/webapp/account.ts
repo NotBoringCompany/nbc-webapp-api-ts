@@ -258,6 +258,11 @@ export const changePassword = async (email: string, password: string, newPasswor
         // password.includes('commonword') || // Avoid common words
         // password.includes(email.split('@')[0])) // Avoid part of email
       ) {
+        console.log('length? ', password.length < 8)
+        console.log('lowercase? ', !/[a-z]/.test(password))
+        console.log('uppercase? ', !/[A-Z]/.test(password))
+        console.log('number? ', !/[0-9]/.test(password))
+        console.log('special symbol? ', !/[!@#$%^&*]/.test(password))
       return {
         status: Status.ERROR,
         message: 'Password does not meet requirements.',
