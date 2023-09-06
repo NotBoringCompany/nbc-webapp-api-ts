@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { changeEmail, changePassword, checkIfVerificationTokenExists, checkIfVerified, checkNewEmailUnverified, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, linkWallet, registerAccount, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
+import { changeEmail, changePassword, checkIfVerificationTokenExists, checkIfVerified, checkNewEmailUnverified, checkUserExists, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, linkWallet, registerAccount, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -124,6 +124,32 @@ router.post('/change-password', async (req: Request, res: Response) => {
         res.status(500).json({
             status: Status.ERROR,
             error: 'Changing password failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.get('/check-user-exists/:email', async (req: Request, res: Response) => {
+    const { email } = req.params
+
+    try {
+        const { status, message, data } = await checkUserExists(email)
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Checking if user exists failed.',
+            message: message,
+            data: null
+        }: {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Checking if user exists failed.',
             message: err,
             data: null
         })

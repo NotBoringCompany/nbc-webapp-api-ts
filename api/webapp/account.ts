@@ -113,6 +113,48 @@ export const registerAccount = async (email: string, password: string): Promise<
 }
 
 /**
+ * `checkUserExists` checks whether a user with `email` exists on the database.
+ * @param email the user's email to check
+ * @returns a ReturnValue instance
+ */
+export const checkUserExists = async (email: string): Promise<ReturnValue> => {
+  try {
+    const User = mongoose.model('_User', UserSchema, '_User')
+    const userQuery = await User.findOne({ email: email.toLowerCase() })
+
+    if (!userQuery) {
+      return {
+        status: Status.SUCCESS,
+        message: 'User not found',
+        data: {
+          userExists: false
+        }
+      }
+    }
+
+    return {
+      status: Status.SUCCESS,
+      message: 'User found',
+      data: {
+        userExists: true
+      }
+    }
+  } catch (err: any) {
+    console.log({
+      status: Status.ERROR,
+      message: err,
+      data: null
+    })
+
+    return {
+      status: Status.ERROR,
+      message: err,
+      data: null
+    }
+  }
+}
+
+/**
  * `changeEmail` changes the user's previous email to a new one (will be unverified until user verifies)
  * @param email the user's current email
  * @param password the user's password
