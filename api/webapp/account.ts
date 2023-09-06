@@ -250,19 +250,14 @@ export const changePassword = async (email: string, password: string, newPasswor
     }
 
     // password requirements
-    if (password.length < 8 || // Minimum length
-        !/[a-z]/.test(password) || // Lowercase letter
-        !/[A-Z]/.test(password) || // Uppercase letter
-        !/[0-9]/.test(password) || // Number
-        !/[!@#$%^&*]/.test(password) // Special symbol
-        // password.includes('commonword') || // Avoid common words
-        // password.includes(email.split('@')[0])) // Avoid part of email
+    if (newPassword.length < 8 || // Minimum length
+        !/[a-z]/.test(newPassword) || // Lowercase letter
+        !/[A-Z]/.test(newPassword) || // Uppercase letter
+        !/[0-9]/.test(newPassword) || // Number
+        !/[!@#$%^&*]/.test(newPassword) // Special symbol
+        // newPassword.includes('commonword') || // Avoid common words
+        // newPassword.includes(email.split('@')[0])) // Avoid part of email
       ) {
-        console.log('length? ', password.length < 8)
-        console.log('lowercase? ', !/[a-z]/.test(password))
-        console.log('uppercase? ', !/[A-Z]/.test(password))
-        console.log('number? ', !/[0-9]/.test(password))
-        console.log('special symbol? ', !/[!@#$%^&*]/.test(password))
       return {
         status: Status.ERROR,
         message: 'Password does not meet requirements.',
