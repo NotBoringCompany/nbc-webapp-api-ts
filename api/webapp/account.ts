@@ -1023,6 +1023,11 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       { expiresIn: '1h' }
     )
 
+    // if a user has unsuccessful attempts previously, reset it.
+    if (userQuery.loginData?.unsuccessfulAttempts) {
+      await User.updateOne({ email: email }, { $set: { 'loginData.unsuccessfulAttempts': 0 } })
+    }
+
     return {
       status: Status.SUCCESS,
       message: 'Login successful. JWT token generated.',
