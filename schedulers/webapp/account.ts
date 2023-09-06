@@ -6,7 +6,7 @@ import { UserSchema } from '../../schemas/User'
 /**
  * Removes expired verification tokens from the database.
  * A user has up to 24 hours to verify their email once the token has been sent. Once 24 hours have passed, the token is considered expired.
- * This scheduler will run every 10 minutes to remove expired tokens.
+ * This scheduler will run every hour to remove expired tokens.
  */
 export const removeExpiredTokens = async (): Promise<void> => {
     try {
