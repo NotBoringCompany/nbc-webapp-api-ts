@@ -1252,5 +1252,3 @@ export const checkWalletExists = async (email: string): Promise<ReturnValue> => 
     }
   }
 }
-
-sendVerificationEmail('suwandresukijat@gmail.com', 'test.com');
