@@ -884,8 +884,10 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
       }
     }
 
+    // check for password match.
+    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
 
-    // if the user is on a temporary ban, we return an error regardless of password matching.
+    // if the user is on a temporary ban and it's still ongoing, we return an error.
     if (userQuery.loginData?.tempBan && !userQuery.loginData?.permanentBan) {
       const unbanDate = new Date(userQuery.loginData.unbanDate!).getTime()
       const now = new Date().getTime()
@@ -894,10 +896,18 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
 
       const timeDiffMins = Math.floor(diff / 1000 / 60)
       const timeDiffHours = Math.floor(diff / 1000 / 60 / 60)
-      return {
-        status: Status.ERROR,
-        message: `You have been temporarily banned from logging in for ${timeDiffHours} hours and ${timeDiffMins} minutes. Please try again later`,
-        data: null
+
+      // if the password matches and the time diff is <= 0, we unban the user.
+      // instead of using a scheduler which is quite costly for us, this would be a temporary solution.
+      if (passwordMatch && diff <= 0) {
+        await userQuery.updateOne({ $set: { 'loginData.tempBan': false, 'loginData.unbanDate': null }})
+        console.log(`User ${email} has been unbanned due to successful login and ban time being expired.`)
+      } else {
+        return {
+          status: Status.ERROR,
+          message: `You have been temporarily banned from logging in for ${timeDiffHours} hours and ${timeDiffMins} minutes. Please try again later`,
+          data: null
+        }
       }
     }
 
@@ -908,9 +918,6 @@ export const emailLogin = async (email: string, password: string): Promise<Retur
         data: null
       }
     }
-
-    // check for password.
-    const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
 
     // if password doesn't match, we add 1 unsuccessful login attempt to the user's loginData and return an error
     if (!passwordMatch) {
