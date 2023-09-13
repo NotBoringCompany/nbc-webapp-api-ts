@@ -421,7 +421,7 @@ router.get('/check-verification-status/:email', async (req: Request, res: Respon
     }
 })
 
-router.post('/send-verification/email', async (req: Request, res: Response) => {
+router.post('/send-verification-email', async (req: Request, res: Response) => {
     try {
         const { email, verificationLink, adminPassword } = req.body
         const { status, message, data } = await sendVerificationEmail(email, verificationLink, adminPassword)
