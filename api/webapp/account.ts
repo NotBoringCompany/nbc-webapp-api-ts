@@ -87,7 +87,7 @@ export const registerAccount = async (email: string, password: string): Promise<
     await newUser.save()
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}&changedEmail=false`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}&changedEmail=false`, process.env.ADMIN_PASSWORD)
 
     return {
       status: Status.SUCCESS,
@@ -604,7 +604,7 @@ export const createVerificationToken = async (email: string, password?: string, 
     await User.updateOne({ email: email }, { $set: { verificationData: verificationData } })
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}`, process.env.ADMIN_PASSWORD)
 
     return {
       status: Status.SUCCESS,
@@ -661,7 +661,7 @@ const createVerificationTokenEmailChange = async (prevEmail: string, email: stri
     await User.updateOne({ email: prevEmail }, { $set: { 'emailChangeData.changeVerificationData': verificationData } })
 
     // send the verification email to the user
-    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}&changedEmail=true&prevEmail=${prevEmail}`)
+    await sendVerificationEmail(email, `https://webapp.nbcompany.io/signup/verify?email=${email}&token=${verificationData.verificationToken}&changedEmail=true&prevEmail=${prevEmail}`, process.env.ADMIN_PASSWORD)
 
     return {
       status: Status.SUCCESS,
@@ -709,9 +709,26 @@ export const verifyJwtToken = (token: string): string | jwt.JwtPayload => {
  * `sendVerificationEmail` sends a verification email to the user's email.
  * @param email the user's email to send the verification email to
  * @param verificationLink the link that will be sent to the user's email for verification
+ * @param adminPassword the admin password to send the email
  * @returns a ReturnValue instance
  */
-export const sendVerificationEmail = async (email: string, verificationLink: string): Promise<ReturnValue> => {
+export const sendVerificationEmail = async (email: string, verificationLink: string, adminPassword: string): Promise<ReturnValue> => {
+  if (!adminPassword) {
+    return {
+      status: Status.ERROR,
+      message: 'Unauthorized to send verification email. Requires admin password',
+      data: null
+    }
+  }
+
+  if (adminPassword !== process.env.ADMIN_PASSWORD) {
+    return {
+      status: Status.ERROR,
+      message: 'Unauthorized to send verification email. False admin password.',
+      data: null
+    }
+  }
+
   try {
     const sendEmail = mg.messages
       .create('nbcompany.io', verificationMsg(email, verificationLink))

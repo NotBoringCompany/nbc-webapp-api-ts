@@ -1,5 +1,5 @@
 import express, { Request, Response } from 'express'
-import { changeEmail, changePassword, checkIfVerificationTokenExists, checkIfVerified, checkNewEmailUnverified, checkUserExists, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, linkWallet, registerAccount, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
+import { changeEmail, changePassword, checkIfVerificationTokenExists, checkIfVerified, checkNewEmailUnverified, checkUserExists, checkVerificationStatus, checkWalletExists, createVerificationToken, emailLogin, linkWallet, registerAccount, sendVerificationEmail, verifyJwtToken, verifyToken, verifyTokenEmailChange } from '../../api/webapp/account'
 import { Status } from '../../utils/retVal'
 import { checkAuth } from '../../middlewares/checkAuth'
 import { ALLOWED_ORIGINS } from '../../server'
@@ -415,6 +415,32 @@ router.get('/check-verification-status/:email', async (req: Request, res: Respon
         res.status(500).json({
             status: Status.ERROR,
             error: 'Checking verification status failed.',
+            message: err,
+            data: null
+        })
+    }
+})
+
+router.post('/send-verification/email', async (req: Request, res: Response) => {
+    try {
+        const { email, verificationLink, adminPassword } = req.body
+        const { status, message, data } = await sendVerificationEmail(email, verificationLink, adminPassword)
+
+        res.json(status === Status.ERROR ? {
+            status,
+            error: 'Sending verification email failed.',
+            message: message,
+            data: null
+        }: {
+            status,
+            error: null,
+            message: message,
+            data
+        })
+    } catch (err: any) {
+        res.status(500).json({
+            status: Status.ERROR,
+            error: 'Sending verification email failed.',
             message: err,
             data: null
         })

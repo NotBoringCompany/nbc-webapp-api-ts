@@ -37,8 +37,8 @@ export const verificationMsg = (email: string, verificationLink: string): Mailgu
 export const verificationTemplate = (verificationLink: string): string => `<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <style>
         /* General styling for the email */
         body {
@@ -87,7 +87,7 @@ export const verificationTemplate = (verificationLink: string): string => `<!DOC
 <body class="email-background">
     <div class="container">
         <div class="header">
-            <img src="https://nbc-main.fra1.cdn.digitaloceanspaces.com/logos/LogoGreen1024x1024%20(2).png" alt="Not Boring Company Logo" class="logo">
+            <img src="https://nbc-main.fra1.cdn.digitaloceanspaces.com/logos/LogoGreen1024x1024%20(2).png" alt="Not Boring Company Logo" class="logo" />
             <h2>Welcome to Not Boring Company!</h2>
         </div>
         <div class="verification-text">
