@@ -57,7 +57,7 @@ router.post('/register-account', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await registerAccount(email, password)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Registering account failed.',
             message: message,
@@ -83,7 +83,7 @@ router.post('/change-email', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await changeEmail(email, password, newEmail)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Changing email failed.',
             message: message,
@@ -109,7 +109,7 @@ router.post('/change-password', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await changePassword(email, password, newPassword)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Changing password failed.',
             message: message,
@@ -135,7 +135,7 @@ router.get('/check-user-exists/:email', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await checkUserExists(email)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Checking if user exists failed.',
             message: message,
@@ -161,7 +161,7 @@ router.post('/link-wallet', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await linkWallet(email, wallet, password, uniqueHash)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Linking wallet failed.',
             message: message,
@@ -187,7 +187,7 @@ router.get('/check-new-email-unverified/:email', async (req: Request, res: Respo
 
     try {
         const { status, message, data } = await checkNewEmailUnverified(email)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Checking if new email is unverified failed.',
             message: message,
@@ -213,7 +213,7 @@ router.post('/verify-token-email-change', async (req: Request, res: Response) =>
 
     try {
         const { status, message, data } = await verifyTokenEmailChange(prevEmail, newEmail, token)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Verifying token failed.',
             message: message,
@@ -239,7 +239,7 @@ router.post('/verify-token', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await verifyToken(email, token)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Verifying token failed.',
             message: message,
@@ -265,7 +265,7 @@ router.post('/create-verification-token', async (req: Request, res: Response) =>
 
     try {
         const { status, message, data } = await createVerificationToken(email, password ?? null, jwtToken ?? null, uniqueHash ?? null)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Creating verification token failed.',
             message: message,
@@ -320,7 +320,7 @@ router.post('/email-login', async (req: Request, res: Response) => {
     try {
         const { status, message, data } = await emailLogin(email, password);
 
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Logging in with email failed.',
             message: message,
@@ -348,7 +348,7 @@ router.get('/check-if-verified/:email', async (req: Request, res: Response) => {
     try {
         const { status, message, data } = await checkIfVerified(email)
 
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Checking if verified failed.',
             message: message,
@@ -374,7 +374,7 @@ router.get('/check-if-verification-token-exists/:email', async (req: Request, re
         const { email } = req.params
         const { status, message, data } = await checkIfVerificationTokenExists(email)
 
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Checking if verification token exists failed.',
             message: message,
@@ -400,7 +400,7 @@ router.get('/check-verification-status/:email', async (req: Request, res: Respon
         const { email } = req.params
         const { status, message, data } = await checkVerificationStatus(email)
 
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Checking verification status failed.',
             message: message,
@@ -426,7 +426,7 @@ router.post('/send-verification-email', async (req: Request, res: Response) => {
         const { email, verificationLink, adminPassword } = req.body
         const { status, message, data } = await sendVerificationEmail(email, verificationLink, adminPassword)
 
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Sending verification email failed.',
             message: message,
@@ -452,7 +452,7 @@ router.get('/check-wallet-exists/:email', async (req: Request, res: Response) =>
         const { email } = req.params
         const { status, message, data } = await checkWalletExists(email)
 
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Checking wallet exists failed.',
             message: message,

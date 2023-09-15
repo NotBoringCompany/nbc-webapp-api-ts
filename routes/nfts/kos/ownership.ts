@@ -9,7 +9,7 @@ router.get('/verify-ownership/:wallet', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await verifyOwnership(wallet)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Ownership verification failed.',
             message: message,

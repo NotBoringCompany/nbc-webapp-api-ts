@@ -9,7 +9,7 @@ router.get('/verify-alpha-access/:email' , async (req: Request, res: Response) =
 
     try {
         const { status, message, data } = await verifyAlphaAccess(email)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'User does not have alpha access.',
             data: null
@@ -34,7 +34,7 @@ router.get('/owns-alpha-invite-code/:email', async (req: Request, res: Response)
 
     try {
         const { status, message, data } = await ownsAlphaInviteCode(email)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'User does not have alpha access.',
             data: null
@@ -59,7 +59,7 @@ router.post('/moralis-login', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await moralisLogin(email, password)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Login to Moralis failed.',
             message: message,
@@ -84,7 +84,7 @@ router.get('/fetch-wallet-from-session-token/:sessionToken', async (req: Request
     const { sessionToken } = req.params
     try {
         const { status, message, data } = await fetchWalletFromSessionToken(sessionToken)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status,
             error: 'Fetching wallet from session token failed.',
             message: message,
@@ -109,7 +109,7 @@ router.post('/reset-password-request', async (req: Request, res: Response) => {
     const { email } = req.body
     try {
         const { status, message, data } = await sendResetPasswordRequest(email);
-        if (status === Status.ERROR) {
+        if (status !== Status.SUCCESS) {
             //goes to catch block
             throw (message);
         }
@@ -133,7 +133,7 @@ router.get('/reset-password-token-check/:tokenId', async (req: Request, res: Res
     const { tokenId } = req.params
     try {
         const { status, message, data } = await resetPasswordTokenCheck(tokenId);
-        if (status === Status.ERROR) {
+        if (status !== Status.SUCCESS) {
             //goes to catch block
             throw (message);
         }
@@ -157,7 +157,7 @@ router.post('/reset-password', async (req: Request, res: Response) => {
     const { tokenId, newPassword, confirmNewPassword } = req.body;
     try {
         const { status, message, data } = await resetPassword(tokenId, newPassword, confirmNewPassword);
-        if (status === Status.ERROR) {
+        if (status !== Status.SUCCESS) {
             //goes to catch block
             throw (message);
         }

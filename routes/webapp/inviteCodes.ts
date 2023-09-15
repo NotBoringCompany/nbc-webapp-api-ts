@@ -9,7 +9,7 @@ router.post('/generate-invite-codes', async (req: Request, res: Response) => {
     
     try {
         const { status, message, data } = await generateInviteCodes(adminPassword, amount, purpose, multiUse, maxUses, expiryDate)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status: status,
             error: message,
             message: null,
@@ -35,7 +35,7 @@ router.post('/redeem-invite-code', async (req: Request, res: Response) => {
 
     try {
         const { status, message, data } = await redeemInviteCode(inviteCode, email, uniqueHash)
-        res.json(status === Status.ERROR ? {
+        res.json(status !== Status.SUCCESS ? {
             status: status,
             error: message,
             message: null,

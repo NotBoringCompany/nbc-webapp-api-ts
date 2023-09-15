@@ -211,7 +211,7 @@ export const changeEmail = async (email: string, password: string, newEmail: str
     const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
     if (!passwordMatch) {
       return {
-        status: Status.ERROR,
+        status: Status.UNAUTHORIZED,
         message: 'Unauthorized to change email. False password.',
         data: null
       }
@@ -285,7 +285,7 @@ export const changePassword = async (email: string, password: string, newPasswor
     const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
     if (!passwordMatch) {
       return {
-        status: Status.ERROR,
+        status: Status.UNAUTHORIZED,
         message: 'Unauthorized to change password. False password.',
         data: null
       }
@@ -350,7 +350,7 @@ export const linkWallet = async (email: string, wallet: string, password?: strin
 
     if (!password && !uniqueHash) {
       return {
-        status: Status.ERROR,
+        status: Status.UNAUTHORIZED,
         message: 'Unauthorized to link wallet. Requires at least a password or uniqueHash',
         data: null
       }
@@ -361,7 +361,7 @@ export const linkWallet = async (email: string, wallet: string, password?: strin
       const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
       if (!passwordMatch) {
         return {
-          status: Status.ERROR,
+          status: Status.UNAUTHORIZED,
           message: 'Unauthorized to link wallet. False password.',
           data: null
         }
@@ -512,7 +512,7 @@ export const createVerificationToken = async (email: string, password?: string, 
   try {
     if (!password && !jwtToken && !uniqueHash) {
       return {
-        status: Status.ERROR,
+        status: Status.UNAUTHORIZED,
         message: 'Unauthorized to send verification email. Requires at least a password or jwtToken or uniqueHash',
         data: null
       }
@@ -554,7 +554,7 @@ export const createVerificationToken = async (email: string, password?: string, 
       const passwordMatch = await bcrypt.compare(password, userQuery._hashed_password.replace(/^\$2y/, '$2a') ?? '')
       if (!passwordMatch) {
         return {
-          status: Status.ERROR,
+          status: Status.UNAUTHORIZED,
           message: 'Unauthorized to send verification email. False password.',
           data: null
         }
@@ -566,7 +566,7 @@ export const createVerificationToken = async (email: string, password?: string, 
       // if the JWT token is invalid, we return an error
       if (!decodedToken) {
         return {
-          status: Status.ERROR,
+          status: Status.UNAUTHORIZED,
           message: 'Unauthorized to send verification email. False JWT token.',
           data: null
         }
@@ -585,7 +585,7 @@ export const createVerificationToken = async (email: string, password?: string, 
       // check if the given unique hash matches the `uniqueHashToCheck`
       if (uniqueHash !== uniqueHashToCheck) {
         return {
-          status: Status.ERROR,
+          status: Status.UNAUTHORIZED,
           message: 'Unauthorized to send verification email. False unique hash.',
           data: null
         }
@@ -715,7 +715,7 @@ export const verifyJwtToken = (token: string): string | jwt.JwtPayload => {
 export const sendVerificationEmail = async (email: string, verificationLink: string, adminPassword: string): Promise<ReturnValue> => {
   if (!adminPassword) {
     return {
-      status: Status.ERROR,
+      status: Status.UNAUTHORIZED,
       message: 'Unauthorized to send verification email. Requires admin password',
       data: null
     }
@@ -723,7 +723,7 @@ export const sendVerificationEmail = async (email: string, verificationLink: str
 
   if (adminPassword !== process.env.ADMIN_PASSWORD) {
     return {
-      status: Status.ERROR,
+      status: Status.UNAUTHORIZED,
       message: 'Unauthorized to send verification email. False admin password.',
       data: null
     }
@@ -1241,7 +1241,7 @@ export const checkVerificationStatus = async (email: string): Promise<ReturnValu
     const verificationTokenExists = await checkIfVerificationTokenExists(email)
     const verified = await checkIfVerified(email)
 
-    if (verificationTokenExists.status === Status.ERROR || verified.status === Status.ERROR) {
+    if (verificationTokenExists.status !== Status.SUCCESS || verified.status !== Status.SUCCESS) {
       return {
         status: Status.ERROR,
         message: 'Something went wrong: verificationTokenExists:' + verificationTokenExists.message + ' verified: ' + verified.message,
