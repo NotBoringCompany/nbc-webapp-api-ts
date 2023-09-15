@@ -730,8 +730,7 @@ export const sendVerificationEmail = async (email: string, verificationLink: str
   }
 
   try {
-    const sendEmail = mg.messages
-      .create('nbcompany.io', verificationMsg(email, verificationLink))
+    const sendEmail = await mg.messages.create('nbcompany.io', verificationMsg(email, verificationLink))
 
     return {
       status: Status.SUCCESS,
