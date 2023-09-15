@@ -734,7 +734,11 @@ export const sendVerificationEmail = async (email: string, verificationLink: str
 
     return {
       status: Status.SUCCESS,
-      message: 'Verification email sent: ' + sendEmail,
+      message: `Verification email sent` + {
+        id: sendEmail.id,
+        message: sendEmail.message,
+        details: sendEmail.details
+      },
       data: null
     }
   } catch (err: any) {
